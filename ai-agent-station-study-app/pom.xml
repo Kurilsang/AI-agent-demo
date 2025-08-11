@@ -151,7 +151,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>cn.bugstack.ai.Application</mainClass>
+                    <mainClass>site.kuril.Application</mainClass>
                     <layout>JAR</layout>
                 </configuration>
             </plugin>
