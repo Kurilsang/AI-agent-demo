@@ -116,6 +116,13 @@
                 <version>1.15</version>
             </dependency>
 
+            <!-- JSR-250 注解支持 (@Resource等) -->
+            <dependency>
+                <groupId>javax.annotation</groupId>
+                <artifactId>javax.annotation-api</artifactId>
+                <version>1.3.2</version>
+            </dependency>
+
             <!-- spring ai 1.0.0 https://central.sonatype.com/artifact/org.springframework.ai/spring-ai-bom -->
             <dependency>
                 <groupId>org.springframework.ai</groupId>

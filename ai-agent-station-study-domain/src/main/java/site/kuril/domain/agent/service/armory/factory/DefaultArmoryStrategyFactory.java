@@ -1,7 +1,10 @@
 package site.kuril.domain.agent.service.armory.factory;
 
 import org.springframework.stereotype.Component;
+import site.kuril.domain.agent.model.entity.ArmoryCommandEntity;
+import site.kuril.domain.agent.service.armory.RootNode;
 
+import javax.annotation.Resource;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
@@ -13,6 +16,28 @@ import java.util.Map;
  */
 @Component
 public class DefaultArmoryStrategyFactory {
+
+    @Resource
+    private RootNode rootNode;
+
+    /**
+     * 获取策略处理器
+     */
+    public StrategyHandler<ArmoryCommandEntity, DynamicContext, String> armoryStrategyHandler() {
+        return new StrategyHandler<ArmoryCommandEntity, DynamicContext, String>() {
+            @Override
+            public String apply(ArmoryCommandEntity entity, DynamicContext context) throws Exception {
+                return rootNode.process(entity, context);
+            }
+        };
+    }
+
+    /**
+     * 策略处理器接口（简化版本）
+     */
+    public interface StrategyHandler<T, C, R> {
+        R apply(T entity, C context) throws Exception;
+    }
 
     /**
      * 动态上下文
@@ -36,6 +61,14 @@ public class DefaultArmoryStrategyFactory {
                 return (T) value;
             }
             return null;
+        }
+
+        /**
+         * 获取指定类型的值
+         */
+        @SuppressWarnings("unchecked")
+        public <T> T getValue(String key) {
+            return (T) contextData.get(key);
         }
 
         public void clear() {

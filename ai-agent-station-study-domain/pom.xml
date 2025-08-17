@@ -52,6 +52,11 @@
             <groupId>cn.bugstack.wrench</groupId>
             <artifactId>xfg-wrench-starter-design-framework</artifactId>
         </dependency>
+        <!-- Spring AI OpenAI -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-openai</artifactId>
+        </dependency>
         <!-- 系统模块 -->
         <dependency>
             <groupId>cn.bugstack.ai</groupId>

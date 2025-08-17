@@ -2,6 +2,9 @@ package site.kuril.domain.agent.service.armory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import site.kuril.domain.agent.adapter.port.IAgentRepository;
 import site.kuril.domain.agent.model.entity.ArmoryCommandEntity;
@@ -46,5 +49,48 @@ public abstract class AbstractArmorySupport {
      * 完整版本签名：protected String doApply(ArmoryCommandEntity requestParameter, DefaultArmoryStrategyFactory.DynamicContext dynamicContext)
      */
     protected abstract String doApply(ArmoryCommandEntity requestParameter, Object dynamicContext) throws Exception;
+
+    /**
+     * 动态注册Bean到Spring容器
+     * @param beanName Bean名称
+     * @param beanClass Bean类型
+     * @param beanInstance Bean实例
+     */
+    protected synchronized <T> void registerBean(String beanName, Class<T> beanClass, T beanInstance) {
+        DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();
+        
+        // 构建Bean定义
+        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(beanClass, () -> beanInstance);
+        BeanDefinition beanDefinition = beanDefinitionBuilder.getRawBeanDefinition();
+        beanDefinition.setScope(BeanDefinition.SCOPE_SINGLETON);
+        
+        // 如果Bean已存在，先移除
+        if (beanFactory.containsBeanDefinition(beanName)) {
+            beanFactory.removeBeanDefinition(beanName);
+        }
+        
+        // 注册新的Bean
+        beanFactory.registerBeanDefinition(beanName, beanDefinition);
+        log.info("成功注册Bean: {}", beanName);
+    }
+
+    /**
+     * 从Spring容器获取Bean
+     * @param beanName Bean名称
+     * @return Bean实例
+     */
+    @SuppressWarnings("unchecked")
+    protected <T> T getBean(String beanName) {
+        return (T) applicationContext.getBean(beanName);
+    }
+
+    /**
+     * 路由方法（简化版本）
+     * 完整版本应使用扳手工程的router方法
+     */
+    protected String router(ArmoryCommandEntity requestParameter, Object dynamicContext) throws Exception {
+        // 简化版本的路由实现
+        return "SUCCESS";
+    }
 
 } 

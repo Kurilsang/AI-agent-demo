@@ -20,6 +20,18 @@
             <artifactId>lombok</artifactId>
         </dependency>
 
+        <!-- Spring Framework 依赖 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+
+        <!-- JSR-250 注解支持 (@Resource等) -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+        </dependency>
+
         <!-- 系统模块 -->
         <dependency>
             <groupId>cn.bugstack.ai</groupId>
