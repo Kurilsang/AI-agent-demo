@@ -3,7 +3,6 @@ package site.kuril.domain.agent.service.armory;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Service;
 import site.kuril.domain.agent.model.entity.ArmoryCommandEntity;
@@ -23,54 +22,72 @@ public class AiClientModelNode extends AbstractArmorySupport {
 
     @Override
     protected String doApply(ArmoryCommandEntity requestParameter, Object dynamicContext) throws Exception {
-        log.info("Ai Agent 构建节点，Mode 对话模型{}", JSON.toJSONString(requestParameter));
+        log.info("Ai Agent 构建节点，Model 模型构建{}", JSON.toJSONString(requestParameter));
 
         DefaultArmoryStrategyFactory.DynamicContext context = (DefaultArmoryStrategyFactory.DynamicContext) dynamicContext;
         List<AiClientModelVO> aiClientModelList = context.getValue(dataName());
 
         if (aiClientModelList == null || aiClientModelList.isEmpty()) {
             log.warn("没有需要被初始化的 ai client model");
-            return router(requestParameter, dynamicContext);
+            return "SUCCESS";
         }
 
-        for (AiClientModelVO modelVO : aiClientModelList) {
+        for (AiClientModelVO aiClientModelVO : aiClientModelList) {
+            // 1. 获取对应的 OpenAiApi Bean
+            String apiBeanName = AiAgentEnumVO.AI_CLIENT_API.getBeanName(aiClientModelVO.getApiId());
+            OpenAiApi openAiApi = (OpenAiApi) getBean(apiBeanName);
+            log.info("获取到API Bean: {}", apiBeanName);
 
-            // 获取当前模型关联的 API Bean 对象
-            OpenAiApi openAiApi = getBean(AiAgentEnumVO.AI_CLIENT_API.getBeanName(modelVO.getApiId()));
-            if (null == openAiApi) {
-                throw new RuntimeException("mode 2 api is null");
+            // 2. 获取关联的 MCP 工具列表（如果有）
+            List<String> toolMcpIds = aiClientModelVO.getToolMcpIds();
+            if (toolMcpIds != null && !toolMcpIds.isEmpty()) {
+                log.info("MCP工具ID列表: {}", toolMcpIds);
+                // TODO: 获取实际的MCP客户端Bean并配置到模型中
+                // for (String mcpId : toolMcpIds) {
+                //     String mcpBeanName = AiAgentEnumVO.AI_CLIENT_TOOL_MCP.getBeanName(mcpId);
+                //     McpSyncClient mcpClient = (McpSyncClient) getBean(mcpBeanName);
+                // }
             }
 
-            // TODO: 获取当前模型关联的 Tool MCP Bean 对象
-            // 暂时简化实现，不使用MCP功能
-            log.info("模型关联的MCP工具ID列表: {}", modelVO.getToolMcpIds());
-
-            // 实例化对话模型（如果有其他模型对接，可以使用 one-api 服务，转换为 openai 模型格式）
-            OpenAiChatModel chatModel = OpenAiChatModel.builder()
+            // 3. 构建 OpenAiChatModel
+            OpenAiChatModel openAiChatModel = OpenAiChatModel.builder()
                     .openAiApi(openAiApi)
-                    .defaultOptions(
-                            OpenAiChatOptions.builder()
-                                    .model(modelVO.getModelName())
-                                    // TODO: 后续添加 MCP 工具回调
-                                    .build())
                     .build();
 
-            // 注册 Bean 对象
-            registerBean(beanName(modelVO.getModelId()), OpenAiChatModel.class, chatModel);
+            // 4. 注册Bean对象
+            registerBean(beanName(aiClientModelVO.getModelId()), OpenAiChatModel.class, openAiChatModel);
+
+            log.info("成功构建并注册 OpenAiChatModel，Bean名称: {}，模型配置: [model={}, apiId={}]",
+                    beanName(aiClientModelVO.getModelId()),
+                    aiClientModelVO.getModelName(),
+                    aiClientModelVO.getApiId());
         }
 
-        return router(requestParameter, dynamicContext);
+        return "SUCCESS";
     }
 
     /**
-     * 获取下一个处理节点（模型构建是最后一个节点）
+     * 获取下一个处理节点
      */
     public DefaultArmoryStrategyFactory.StrategyHandler<ArmoryCommandEntity, DefaultArmoryStrategyFactory.DynamicContext, String> get(
             ArmoryCommandEntity requestParameter, 
             DefaultArmoryStrategyFactory.DynamicContext dynamicContext) throws Exception {
         
-        // 返回 null 表示流程结束
-        return null;
+        try {
+            // 通过ApplicationContext获取下一个节点，避免循环依赖
+            AiClientAdvisorNode aiClientAdvisorNode = applicationContext.getBean(AiClientAdvisorNode.class);
+            log.info("✅ 成功获取 AiClientAdvisorNode: {}", aiClientAdvisorNode.getClass().getSimpleName());
+            
+            return new DefaultArmoryStrategyFactory.StrategyHandler<ArmoryCommandEntity, DefaultArmoryStrategyFactory.DynamicContext, String>() {
+                @Override
+                public String apply(ArmoryCommandEntity entity, DefaultArmoryStrategyFactory.DynamicContext context) throws Exception {
+                    return aiClientAdvisorNode.process(entity, context);
+                }
+            };
+        } catch (Exception e) {
+            log.error("⚠️ 获取AiClientAdvisorNode失败: {}", e.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -85,7 +102,14 @@ public class AiClientModelNode extends AbstractArmorySupport {
 
     @Override
     protected String router(ArmoryCommandEntity requestParameter, Object dynamicContext) throws Exception {
-        // 模型构建是最后一个节点，直接返回成功
+        // 路由到下一个节点
+        DefaultArmoryStrategyFactory.StrategyHandler<ArmoryCommandEntity, DefaultArmoryStrategyFactory.DynamicContext, String> nextHandler = 
+                get(requestParameter, (DefaultArmoryStrategyFactory.DynamicContext) dynamicContext);
+        
+        if (nextHandler != null) {
+            return nextHandler.apply(requestParameter, (DefaultArmoryStrategyFactory.DynamicContext) dynamicContext);
+        }
+        
         return "SUCCESS";
     }
 

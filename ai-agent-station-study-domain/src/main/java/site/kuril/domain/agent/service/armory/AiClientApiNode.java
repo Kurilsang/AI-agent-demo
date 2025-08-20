@@ -9,7 +9,6 @@ import site.kuril.domain.agent.model.valobj.AiAgentEnumVO;
 import site.kuril.domain.agent.model.valobj.AiClientApiVO;
 import site.kuril.domain.agent.service.armory.factory.DefaultArmoryStrategyFactory;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -20,9 +19,6 @@ import java.util.List;
 @Service
 public class AiClientApiNode extends AbstractArmorySupport {
 
-    @Resource
-    private AiClientToolMcpNode aiClientToolMcpNode;
-
     @Override
     protected String doApply(ArmoryCommandEntity requestParameter, Object dynamicContext) throws Exception {
         log.info("Ai Agent 构建节点，API 接口请求{}", JSON.toJSONString(requestParameter));
@@ -32,23 +28,26 @@ public class AiClientApiNode extends AbstractArmorySupport {
 
         if (aiClientApiList == null || aiClientApiList.isEmpty()) {
             log.warn("没有需要被初始化的 ai client api");
-            return router(requestParameter, dynamicContext);
+            return "SUCCESS";
         }
 
         for (AiClientApiVO aiClientApiVO : aiClientApiList) {
-            // 构建 OpenAiApi
+            // 构建OpenAiApi对象
             OpenAiApi openAiApi = OpenAiApi.builder()
                     .baseUrl(aiClientApiVO.getBaseUrl())
                     .apiKey(aiClientApiVO.getApiKey())
-                    .completionsPath(aiClientApiVO.getCompletionsPath())
-                    .embeddingsPath(aiClientApiVO.getEmbeddingsPath())
                     .build();
 
-            // 注册 OpenAiApi Bean 对象
+            // 注册Bean对象
             registerBean(beanName(aiClientApiVO.getApiId()), OpenAiApi.class, openAiApi);
+
+            log.info("成功构建并注册 OpenAiApi，Bean名称: {}，API配置: [baseUrl={}, apiId={}]",
+                    beanName(aiClientApiVO.getApiId()),
+                    aiClientApiVO.getBaseUrl(),
+                    aiClientApiVO.getApiId());
         }
 
-        return router(requestParameter, dynamicContext);
+        return "SUCCESS";
     }
 
     /**
@@ -58,21 +57,24 @@ public class AiClientApiNode extends AbstractArmorySupport {
             ArmoryCommandEntity armoryCommandEntity, 
             DefaultArmoryStrategyFactory.DynamicContext dynamicContext) throws Exception {
         
-        log.info("AiClientApiNode get方法被调用，准备路由到AiClientToolMcpNode");
-        log.info("aiClientToolMcpNode是否为null: {}", aiClientToolMcpNode == null);
+        log.info("=== AiClientApiNode.get() 方法被调用 ===");
         
-        if (aiClientToolMcpNode == null) {
-            log.error("aiClientToolMcpNode为null，无法路由到下一个节点");
+        try {
+            // 通过ApplicationContext获取下一个节点，避免循环依赖
+            AiClientToolMcpNode aiClientToolMcpNode = applicationContext.getBean(AiClientToolMcpNode.class);
+            log.info("✅ 成功获取 AiClientToolMcpNode: {}", aiClientToolMcpNode.getClass().getSimpleName());
+            
+            return new DefaultArmoryStrategyFactory.StrategyHandler<ArmoryCommandEntity, DefaultArmoryStrategyFactory.DynamicContext, String>() {
+                @Override
+                public String apply(ArmoryCommandEntity entity, DefaultArmoryStrategyFactory.DynamicContext context) throws Exception {
+                    log.info("=== 准备调用aiClientToolMcpNode.process() ===");
+                    return aiClientToolMcpNode.process(entity, context);
+                }
+            };
+        } catch (Exception e) {
+            log.error("⚠️ 获取AiClientToolMcpNode失败: {}", e.getMessage());
             return null;
         }
-        
-        return new DefaultArmoryStrategyFactory.StrategyHandler<ArmoryCommandEntity, DefaultArmoryStrategyFactory.DynamicContext, String>() {
-            @Override
-            public String apply(ArmoryCommandEntity entity, DefaultArmoryStrategyFactory.DynamicContext context) throws Exception {
-                log.info("准备调用aiClientToolMcpNode.doApply");
-                return aiClientToolMcpNode.doApply(entity, context);
-            }
-        };
     }
 
     @Override
@@ -87,14 +89,20 @@ public class AiClientApiNode extends AbstractArmorySupport {
 
     @Override
     protected String router(ArmoryCommandEntity requestParameter, Object dynamicContext) throws Exception {
+        log.info("=== AiClientApiNode.router() 方法被调用 ===");
+        
         // 路由到下一个节点
         DefaultArmoryStrategyFactory.StrategyHandler<ArmoryCommandEntity, DefaultArmoryStrategyFactory.DynamicContext, String> nextHandler = 
                 get(requestParameter, (DefaultArmoryStrategyFactory.DynamicContext) dynamicContext);
         
         if (nextHandler != null) {
-            return nextHandler.apply(requestParameter, (DefaultArmoryStrategyFactory.DynamicContext) dynamicContext);
+            log.info("✅ 找到下一个处理节点，准备执行");
+            String result = nextHandler.apply(requestParameter, (DefaultArmoryStrategyFactory.DynamicContext) dynamicContext);
+            log.info("✅ 下一个处理节点执行完成，返回结果: {}", result);
+            return result;
         }
         
+        log.warn("⚠️ 没有找到下一个处理节点，返回SUCCESS");
         return "SUCCESS";
     }
 

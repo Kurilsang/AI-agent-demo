@@ -10,8 +10,10 @@ import site.kuril.domain.agent.service.armory.factory.DefaultArmoryStrategyFacto
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 /**
  * AI客户端数据加载策略
@@ -77,11 +79,18 @@ public class AiClientLoadDataStrategy implements ILoadDataStrategy {
             List<AiClientAdvisorVO> aiClientAdvisorList = aiClientAdvisorListFuture.get();
             List<AiClientVO> aiClientList = aiClientListFuture.get();
 
+            // 将系统提示词转换为 Map 结构，方便后续使用
+            Map<String, AiClientSystemPromptVO> systemPromptMap = aiClientSystemPromptList.stream()
+                    .collect(Collectors.toMap(AiClientSystemPromptVO::getPromptId, vo -> vo));
+
+            // 解析顾问配置的扩展参数
+            aiClientAdvisorList.forEach(AiClientAdvisorVO::parseExtParam);
+
             // 将加载的数据存储到动态上下文中
             context.put(AiAgentEnumVO.AI_CLIENT_API.getDataName(), aiClientApiList);
             context.put(AiAgentEnumVO.AI_CLIENT_MODEL.getDataName(), aiClientModelList);
             context.put(AiAgentEnumVO.AI_CLIENT_TOOL_MCP.getDataName(), aiClientToolMcpList);
-            context.put(AiAgentEnumVO.AI_CLIENT_SYSTEM_PROMPT.getDataName(), aiClientSystemPromptList);
+            context.put(AiAgentEnumVO.AI_CLIENT_SYSTEM_PROMPT.getDataName(), systemPromptMap);  // 存储Map结构
             context.put(AiAgentEnumVO.AI_CLIENT_ADVISOR.getDataName(), aiClientAdvisorList);
             context.put(AiAgentEnumVO.AI_CLIENT.getDataName(), aiClientList);
 

@@ -97,7 +97,8 @@ public class RootNode extends AbstractArmorySupport {
             return new DefaultArmoryStrategyFactory.StrategyHandler<ArmoryCommandEntity, DefaultArmoryStrategyFactory.DynamicContext, String>() {
                 @Override
                 public String apply(ArmoryCommandEntity entity, DefaultArmoryStrategyFactory.DynamicContext context) throws Exception {
-                    return aiClientApiNode.doApply(entity, context);
+                    log.info("RootNode 路由到 AiClientApiNode，开始执行API节点处理");
+                    return aiClientApiNode.process(entity, context);  // 使用process方法而不是doApply
                 }
             };
         }
@@ -110,7 +111,11 @@ public class RootNode extends AbstractArmorySupport {
      * 简化版本的处理方法
      */
     public String process(ArmoryCommandEntity armoryCommandEntity, Object dynamicContext) throws Exception {
-        return doApply(armoryCommandEntity, dynamicContext);
+        // 执行当前节点的处理逻辑
+        doApply(armoryCommandEntity, dynamicContext);
+        
+        // 路由到下一个节点
+        return router(armoryCommandEntity, dynamicContext);
     }
 
 } 

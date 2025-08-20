@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * AI客户端配置值对象
@@ -30,6 +31,26 @@ public class AiClientVO {
      * 描述
      */
     private String description;
+
+    /**
+     * 关联的系统提示词ID列表
+     */
+    private List<String> promptIdList;
+
+    /**
+     * 关联的模型Bean名称
+     */
+    private String modelBeanName;
+
+    /**
+     * 关联的MCP工具Bean名称列表
+     */
+    private List<String> mcpBeanNameList;
+
+    /**
+     * 关联的顾问角色Bean名称列表
+     */
+    private List<String> advisorBeanNameList;
 
     /**
      * 状态(0:禁用,1:启用)

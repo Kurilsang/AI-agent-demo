@@ -107,4 +107,15 @@ public abstract class AbstractArmorySupport {
         return "SUCCESS";
     }
 
+    /**
+     * 统一的处理方法
+     * 确保每个节点都能正确执行doApply和router逻辑
+     */
+    public String process(ArmoryCommandEntity armoryCommandEntity, Object dynamicContext) throws Exception {
+        // 执行当前节点的处理逻辑
+        doApply(armoryCommandEntity, dynamicContext);
+        
+        // 路由到下一个节点
+        return router(armoryCommandEntity, dynamicContext);
+    }
 } 
