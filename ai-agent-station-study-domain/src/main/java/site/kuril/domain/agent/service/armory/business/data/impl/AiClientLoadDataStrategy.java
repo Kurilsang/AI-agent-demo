@@ -80,10 +80,10 @@ public class AiClientLoadDataStrategy implements ILoadDataStrategy {
             // 将加载的数据存储到动态上下文中
             context.put(AiAgentEnumVO.AI_CLIENT_API.getDataName(), aiClientApiList);
             context.put(AiAgentEnumVO.AI_CLIENT_MODEL.getDataName(), aiClientModelList);
-            context.put("ai_client_tool_mcp", aiClientToolMcpList);
-            context.put("ai_client_system_prompt", aiClientSystemPromptList);
-            context.put("ai_client_advisor", aiClientAdvisorList);
-            context.put("ai_client", aiClientList);
+            context.put(AiAgentEnumVO.AI_CLIENT_TOOL_MCP.getDataName(), aiClientToolMcpList);
+            context.put(AiAgentEnumVO.AI_CLIENT_SYSTEM_PROMPT.getDataName(), aiClientSystemPromptList);
+            context.put(AiAgentEnumVO.AI_CLIENT_ADVISOR.getDataName(), aiClientAdvisorList);
+            context.put(AiAgentEnumVO.AI_CLIENT.getDataName(), aiClientList);
 
             log.info("AI客户端数据加载策略执行完成，客户端ID列表: {}，加载数据：API({})，模型({})，MCP工具({})，提示词({})，顾问({})，客户端({})", 
                     clientIdList, 

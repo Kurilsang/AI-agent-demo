@@ -8,6 +8,7 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import site.kuril.domain.agent.adapter.port.IAgentRepository;
 import site.kuril.domain.agent.model.entity.ArmoryCommandEntity;
+import site.kuril.domain.agent.service.armory.factory.DefaultArmoryStrategyFactory;
 
 import javax.annotation.Resource;
 import java.util.concurrent.ExecutionException;
@@ -35,6 +36,19 @@ public abstract class AbstractArmorySupport {
 
     @Resource
     protected IAgentRepository repository;
+
+    /**
+     * 获取Bean名称
+     * @param beanId Bean ID
+     * @return Bean名称
+     */
+    protected abstract String beanName(String beanId);
+
+    /**
+     * 获取数据名称
+     * @return 数据名称
+     */
+    protected abstract String dataName();
 
     /**
      * 多线程处理方法

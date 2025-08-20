@@ -10,6 +10,8 @@ import site.kuril.infrastructure.dao.po.*;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.alibaba.fastjson2.JSON;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Agent仓储实现
@@ -115,7 +117,7 @@ public class AgentRepository implements IAgentRepository {
         return aiClientModelDao.queryAll()
                 .stream()
                 .filter(model -> modelIds.contains(model.getModelId()) && model.getStatus() == 1)
-                .map(this::convertToAiClientModelVO)
+                .map(model -> convertToAiClientModelVO(model, modelIds))
                 .collect(Collectors.toList());
     }
 
@@ -126,7 +128,7 @@ public class AgentRepository implements IAgentRepository {
         return aiClientModelDao.queryAll()
                 .stream()
                 .filter(model -> modelIds.contains(model.getModelId()) && model.getStatus() == 1)
-                .map(this::convertToAiClientModelVO)
+                .map(model -> convertToAiClientModelVO(model))
                 .collect(Collectors.toList());
     }
 
@@ -236,7 +238,21 @@ public class AgentRepository implements IAgentRepository {
                 .build();
     }
 
+    private AiClientModelVO convertToAiClientModelVO(AiClientModel po, List<String> modelIds) {
+        return convertToAiClientModelVO(po);
+    }
+
     private AiClientModelVO convertToAiClientModelVO(AiClientModel po) {
+        // 查询当前模型关联的 MCP 工具 ID
+        List<String> toolMcpIds = aiClientConfigDao.queryAll()
+                .stream()
+                .filter(config -> "model".equals(config.getSourceType()) && 
+                                 po.getModelId().equals(config.getSourceId()) &&
+                                 "mcp".equals(config.getTargetType()) &&
+                                 config.getStatus() == 1)
+                .map(AiClientConfig::getTargetId)
+                .collect(Collectors.toList());
+
         return AiClientModelVO.builder()
                 .modelId(po.getModelId())
                 .apiId(po.getApiId())
@@ -245,11 +261,12 @@ public class AgentRepository implements IAgentRepository {
                 .status(po.getStatus())
                 .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
+                .toolMcpIds(toolMcpIds)
                 .build();
     }
 
     private AiClientToolMcpVO convertToAiClientToolMcpVO(AiClientToolMcp po) {
-        return AiClientToolMcpVO.builder()
+        AiClientToolMcpVO.AiClientToolMcpVOBuilder builder = AiClientToolMcpVO.builder()
                 .mcpId(po.getMcpId())
                 .mcpName(po.getMcpName())
                 .transportType(po.getTransportType())
@@ -257,8 +274,25 @@ public class AgentRepository implements IAgentRepository {
                 .requestTimeout(po.getRequestTimeout())
                 .status(po.getStatus())
                 .createTime(po.getCreateTime())
-                .updateTime(po.getUpdateTime())
-                .build();
+                .updateTime(po.getUpdateTime());
+
+        // 根据传输类型解析配置
+        if (StringUtils.isNotBlank(po.getTransportConfig())) {
+            try {
+                if ("sse".equals(po.getTransportType())) {
+                    AiClientToolMcpVO.TransportConfigSse sseConfig = JSON.parseObject(po.getTransportConfig(), AiClientToolMcpVO.TransportConfigSse.class);
+                    builder.transportConfigSse(sseConfig);
+                } else if ("stdio".equals(po.getTransportType())) {
+                    AiClientToolMcpVO.TransportConfigStdio stdioConfig = JSON.parseObject(po.getTransportConfig(), AiClientToolMcpVO.TransportConfigStdio.class);
+                    builder.transportConfigStdio(stdioConfig);
+                }
+            } catch (Exception e) {
+                log.warn("解析MCP传输配置失败，mcpId: {}, transportType: {}, config: {}", 
+                        po.getMcpId(), po.getTransportType(), po.getTransportConfig(), e);
+            }
+        }
+
+        return builder.build();
     }
 
     private AiClientSystemPromptVO convertToAiClientSystemPromptVO(AiClientSystemPrompt po) {

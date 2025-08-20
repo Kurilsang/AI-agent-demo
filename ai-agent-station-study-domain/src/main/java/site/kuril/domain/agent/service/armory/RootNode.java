@@ -35,27 +35,35 @@ public class RootNode extends AbstractArmorySupport {
 
     @Override
     protected void multiThread(ArmoryCommandEntity requestParameter, Object dynamicContext) throws ExecutionException, InterruptedException, TimeoutException {
-        // 获取命令；不同的命令类型，对应不同的数据加载策略
-        String commandType = requestParameter.getCommandType();
-
-        // 获取策略
-        AiAgentEnumVO aiAgentEnumVO = AiAgentEnumVO.getByCode(commandType);
-        String loadDataStrategyKey = aiAgentEnumVO.getLoadDataStrategy();
+        // 获取数据加载策略
+        String loadDataStrategyKey = requestParameter.getLoadDataStrategy();
 
         // 加载数据
         ILoadDataStrategy loadDataStrategy = loadDataStrategyMap.get(loadDataStrategyKey);
         if (loadDataStrategy != null) {
             loadDataStrategy.loadData(requestParameter, dynamicContext);
-            log.info("数据加载策略执行完成，命令类型: {}, 策略: {}", commandType, loadDataStrategyKey);
+            log.info("数据加载策略执行完成，命令类型: {}, 策略: {}", requestParameter.getCommandType(), loadDataStrategyKey);
         } else {
-            log.warn("未找到对应的数据加载策略，命令类型: {}", commandType);
+            log.warn("未找到对应的数据加载策略，命令类型: {}", requestParameter.getCommandType());
         }
     }
 
     @Override
     protected String doApply(ArmoryCommandEntity requestParameter, Object dynamicContext) throws Exception {
-        log.info("Ai Agent 构建，数据加载节点 {}", JSON.toJSONString(requestParameter));
+        log.info("Ai Agent 构建，数据加载节点{}", JSON.toJSONString(requestParameter));
         return router(requestParameter, dynamicContext);
+    }
+
+    @Override
+    protected String beanName(String beanId) {
+        // RootNode 不需要注册Bean，返回空字符串
+        return "";
+    }
+
+    @Override
+    protected String dataName() {
+        // RootNode 不需要获取特定数据，返回空字符串
+        return "";
     }
 
     @Override

@@ -11,9 +11,12 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum AiAgentEnumVO {
 
-    AI_CLIENT("client", "aiClientLoadDataStrategy", "ai_client_api", "ai_client_api_"),
+    AI_CLIENT("client", "aiClientLoadDataStrategy", "ai_client", "ai_client_"),
     AI_CLIENT_API("api", "aiClientApiLoadDataStrategy", "ai_client_api", "ai_client_api_"),
-    AI_CLIENT_MODEL("model", "aiClientModelLoadDataStrategy", "ai_client_model", "ai_client_model_");
+    AI_CLIENT_MODEL("model", "aiClientModelLoadDataStrategy", "ai_client_model", "ai_client_model_"),
+    AI_CLIENT_TOOL_MCP("tool_mcp", "aiClientToolMcpLoadDataStrategy", "ai_client_tool_mcp", "ai_client_tool_mcp_"),
+    AI_CLIENT_SYSTEM_PROMPT("system_prompt", "aiClientSystemPromptLoadDataStrategy", "ai_client_system_prompt", "ai_client_system_prompt_"),
+    AI_CLIENT_ADVISOR("advisor", "aiClientAdvisorLoadDataStrategy", "ai_client_advisor", "ai_client_advisor_");
 
     /**
      * 命令类型代码

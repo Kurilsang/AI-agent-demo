@@ -2,50 +2,46 @@ package site.kuril.domain.agent.service.armory;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Service;
 import site.kuril.domain.agent.model.entity.ArmoryCommandEntity;
 import site.kuril.domain.agent.model.valobj.AiAgentEnumVO;
-import site.kuril.domain.agent.model.valobj.AiClientApiVO;
+import site.kuril.domain.agent.model.valobj.AiClientToolMcpVO;
 import site.kuril.domain.agent.service.armory.factory.DefaultArmoryStrategyFactory;
 
 import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * AI客户端API节点
- * 用于构建和注册OpenAiApi对象到Spring容器
+ * AI客户端MCP工具节点
+ * 用于构建和注册McpSyncClient对象到Spring容器
  */
 @Slf4j
 @Service
-public class AiClientApiNode extends AbstractArmorySupport {
+public class AiClientToolMcpNode extends AbstractArmorySupport {
 
     @Resource
-    private AiClientToolMcpNode aiClientToolMcpNode;
+    private AiClientModelNode aiClientModelNode;
 
     @Override
     protected String doApply(ArmoryCommandEntity requestParameter, Object dynamicContext) throws Exception {
-        log.info("Ai Agent 构建节点，API 接口请求{}", JSON.toJSONString(requestParameter));
+        log.info("Ai Agent 构建节点，Tool MCP 工具配置{}", JSON.toJSONString(requestParameter));
 
         DefaultArmoryStrategyFactory.DynamicContext context = (DefaultArmoryStrategyFactory.DynamicContext) dynamicContext;
-        List<AiClientApiVO> aiClientApiList = context.getValue(dataName());
+        List<AiClientToolMcpVO> aiClientToolMcpList = context.getValue(dataName());
 
-        if (aiClientApiList == null || aiClientApiList.isEmpty()) {
-            log.warn("没有需要被初始化的 ai client api");
+        if (aiClientToolMcpList == null || aiClientToolMcpList.isEmpty()) {
+            log.warn("没有需要被初始化的 ai client tool mcp");
             return router(requestParameter, dynamicContext);
         }
 
-        for (AiClientApiVO aiClientApiVO : aiClientApiList) {
-            // 构建 OpenAiApi
-            OpenAiApi openAiApi = OpenAiApi.builder()
-                    .baseUrl(aiClientApiVO.getBaseUrl())
-                    .apiKey(aiClientApiVO.getApiKey())
-                    .completionsPath(aiClientApiVO.getCompletionsPath())
-                    .embeddingsPath(aiClientApiVO.getEmbeddingsPath())
-                    .build();
+        for (AiClientToolMcpVO mcpVO : aiClientToolMcpList) {
+            // TODO: 创建 MCP 服务
+            // 暂时简化实现，只输出日志
+            log.info("处理MCP配置: mcpId={}, mcpName={}, transportType={}", 
+                    mcpVO.getMcpId(), mcpVO.getMcpName(), mcpVO.getTransportType());
 
-            // 注册 OpenAiApi Bean 对象
-            registerBean(beanName(aiClientApiVO.getApiId()), OpenAiApi.class, openAiApi);
+            // TODO: 注册 MCP 对象到Spring容器
+            // registerBean(beanName(mcpVO.getMcpId()), McpSyncClient.class, mcpSyncClient);
         }
 
         return router(requestParameter, dynamicContext);
@@ -55,34 +51,25 @@ public class AiClientApiNode extends AbstractArmorySupport {
      * 获取下一个处理节点
      */
     public DefaultArmoryStrategyFactory.StrategyHandler<ArmoryCommandEntity, DefaultArmoryStrategyFactory.DynamicContext, String> get(
-            ArmoryCommandEntity armoryCommandEntity, 
+            ArmoryCommandEntity requestParameter, 
             DefaultArmoryStrategyFactory.DynamicContext dynamicContext) throws Exception {
-        
-        log.info("AiClientApiNode get方法被调用，准备路由到AiClientToolMcpNode");
-        log.info("aiClientToolMcpNode是否为null: {}", aiClientToolMcpNode == null);
-        
-        if (aiClientToolMcpNode == null) {
-            log.error("aiClientToolMcpNode为null，无法路由到下一个节点");
-            return null;
-        }
         
         return new DefaultArmoryStrategyFactory.StrategyHandler<ArmoryCommandEntity, DefaultArmoryStrategyFactory.DynamicContext, String>() {
             @Override
             public String apply(ArmoryCommandEntity entity, DefaultArmoryStrategyFactory.DynamicContext context) throws Exception {
-                log.info("准备调用aiClientToolMcpNode.doApply");
-                return aiClientToolMcpNode.doApply(entity, context);
+                return aiClientModelNode.doApply(entity, context);
             }
         };
     }
 
     @Override
     protected String beanName(String beanId) {
-        return AiAgentEnumVO.AI_CLIENT_API.getBeanName(beanId);
+        return AiAgentEnumVO.AI_CLIENT_TOOL_MCP.getBeanName(beanId);
     }
 
     @Override
     protected String dataName() {
-        return AiAgentEnumVO.AI_CLIENT_API.getDataName();
+        return AiAgentEnumVO.AI_CLIENT_TOOL_MCP.getDataName();
     }
 
     @Override

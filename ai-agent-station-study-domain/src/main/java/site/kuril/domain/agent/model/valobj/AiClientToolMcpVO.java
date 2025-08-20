@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * AI客户端MCP工具配置值对象
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 public class AiClientToolMcpVO {
 
     /**
-     * MCP名称
+     * MCP ID
      */
     private String mcpId;
 
@@ -35,6 +36,16 @@ public class AiClientToolMcpVO {
      * 传输配置(sse/stdio)
      */
     private String transportConfig;
+
+    /**
+     * SSE传输配置对象
+     */
+    private TransportConfigSse transportConfigSse;
+
+    /**
+     * Stdio传输配置对象
+     */
+    private TransportConfigStdio transportConfigStdio;
 
     /**
      * 请求超时时间(分钟)
@@ -55,5 +66,38 @@ public class AiClientToolMcpVO {
      * 更新时间
      */
     private LocalDateTime updateTime;
+
+    /**
+     * SSE传输配置
+     */
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class TransportConfigSse {
+        private String baseUri;
+        private String sseEndpoint;
+    }
+
+    /**
+     * Stdio传输配置
+     */
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class TransportConfigStdio {
+        private Map<String, Stdio> stdio;
+        
+        @Data
+        @Builder
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class Stdio {
+            private String command;
+            private String[] args;
+            private Map<String, String> env;
+        }
+    }
 
 } 

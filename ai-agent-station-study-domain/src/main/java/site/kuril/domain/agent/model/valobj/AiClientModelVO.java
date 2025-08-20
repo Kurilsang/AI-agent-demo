@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * AI客户端模型配置值对象
@@ -35,6 +36,11 @@ public class AiClientModelVO {
      * 模型类型：openai、deepseek、claude
      */
     private String modelType;
+
+    /**
+     * 关联的MCP工具ID列表
+     */
+    private List<String> toolMcpIds;
 
     /**
      * 状态：0-禁用，1-启用

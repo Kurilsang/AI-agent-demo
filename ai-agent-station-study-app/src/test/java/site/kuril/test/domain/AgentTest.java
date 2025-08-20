@@ -10,6 +10,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import site.kuril.domain.agent.model.entity.ArmoryCommandEntity;
 import site.kuril.domain.agent.model.valobj.AiAgentEnumVO;
 import site.kuril.domain.agent.service.armory.factory.DefaultArmoryStrategyFactory;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.messages.UserMessage;
+import com.alibaba.fastjson.JSON;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
@@ -157,4 +162,32 @@ public class AgentTest {
         log.info("========== 多客户端API构建测试完成 ==========");
     }
 
+    @Test
+    public void test_aiClientModelNode() throws Exception {
+        DefaultArmoryStrategyFactory.StrategyHandler<ArmoryCommandEntity, DefaultArmoryStrategyFactory.DynamicContext, String> armoryStrategyHandler =
+                defaultArmoryStrategyFactory.armoryStrategyHandler();
+
+        String apply = armoryStrategyHandler.apply(
+                ArmoryCommandEntity.builder()
+                        .commandType(AiAgentEnumVO.AI_CLIENT.getCode())
+                        .commandIdList(Arrays.asList("3001"))
+                        .build(),
+                new DefaultArmoryStrategyFactory.DynamicContext());
+
+        log.info("AI Agent 构建流程完成: {}", apply);
+
+        // 获取构建好的 OpenAiChatModel
+        OpenAiChatModel openAiChatModel = (OpenAiChatModel) applicationContext.getBean(AiAgentEnumVO.AI_CLIENT_MODEL.getBeanName("2001"));
+        log.info("模型构建:{}", openAiChatModel);
+
+        // 测试对话功能
+        Prompt prompt = new Prompt(new UserMessage("你好，请介绍一下你自己"));
+
+        ChatResponse chatResponse = openAiChatModel.call(prompt);
+
+        log.info("测试结果(call):{}", JSON.toJSONString(chatResponse));
+        
+        // 输出对话消息
+        log.info("对话输出: {}", chatResponse.getResult().getOutput());
+    }
 } 
