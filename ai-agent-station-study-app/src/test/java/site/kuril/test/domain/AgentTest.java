@@ -315,13 +315,6 @@ public class AgentTest {
             
             log.info("🎉 AI Agent Advisor 顾问角色和 ChatClient 客户端测试完成！");
             log.info("📋 总结：成功实现了advisor顾问角色的实例化框架和ChatClient对话客户端的构建框架");
-            log.info("🏗️ 实现的核心功能包括：");
-            log.info("   ✓ AiClientAdvisorTypeEnumVO - 顾问类型策略枚举");
-            log.info("   ✓ AiClientAdvisorNode - 顾问角色构建节点");
-            log.info("   ✓ AiClientNode - ChatClient客户端构建节点");
-            log.info("   ✓ 责任链模式 - RootNode -> AiClientApiNode -> AiClientToolMcpNode -> AiClientAdvisorNode -> AiClientNode");
-            log.info("   ✓ 动态Bean注册 - 各组件动态注册到Spring容器");
-            log.info("   ✓ 数据加载策略 - 系统提示词Map结构，顾问配置解析");
             
         } catch (Exception e) {
             log.error("❌ 测试过程中出现错误: {}", e.getMessage());
