@@ -87,11 +87,13 @@ public class AiAgentTest {
                                         .maxMessages(100)
                                         .build()
                         ).build(),
-                        new RagAnswerAdvisor(vectorStore, SearchRequest.builder()
-                                .topK(5)
-                                .filterExpression("knowledge == 'article-prompt-words'")
-                                .build()),
-                        SimpleLoggerAdvisor.builder().build())
+                        SimpleLoggerAdvisor.builder().build()
+                        // TODO: 启用RAG顾问需要真实的向量存储配置
+                        // new RagAnswerAdvisor(vectorStore, SearchRequest.builder()
+                        //         .topK(5)
+                        //         .filterExpression("knowledge == 'article-prompt-words'")
+                        //         .build())
+                )
                 .build();
     }
 
@@ -217,11 +219,11 @@ public class AiAgentTest {
                                 MessageWindowChatMemory.builder()
                                         .maxMessages(100)
                                         .build()
-                        ).build(),
-                        new RagAnswerAdvisor(vectorStore, SearchRequest.builder()
-                                .topK(5)
-                                .filterExpression("knowledge == 'article-prompt-words'")
-                                .build())
+                        ).build()
+                        // new RagAnswerAdvisor(vectorStore, SearchRequest.builder()
+                        //         .topK(5)
+                        //         .filterExpression("knowledge == 'article-prompt-words'")
+                        //         .build())
                 )
                 .defaultOptions(OpenAiChatOptions.builder()
                         .model("gpt-4.1")
@@ -258,7 +260,7 @@ public class AiAgentTest {
                                         .maxMessages(100)
                                         .build()
                         ).build(),
-                        new SimpleLoggerAdvisor()
+                        SimpleLoggerAdvisor.builder().build()
                 )
                 .defaultOptions(OpenAiChatOptions.builder()
                         .model("gpt-4.1")

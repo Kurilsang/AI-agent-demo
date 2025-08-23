@@ -49,10 +49,14 @@ spring:
     openai:
       base-url: https://yunwu.ai
       api-key: sk-mWDhedqMplSqa0tE5ufbWwaLff0XV9h4j5AU0PE05skrQmXV
+      request-timeout: 60s  # 🕒 设置60秒请求超时，解决复杂AI任务超时问题
     vectorstore:
       pgvector:
         table-name: vector_store_openai
         schema-name: public
+  # WebClient全局超时配置
+  webflux:
+    timeout: 60s  # 🕒 WebFlux响应式客户端超时设置
 
 # MyBatis 配置
 mybatis:

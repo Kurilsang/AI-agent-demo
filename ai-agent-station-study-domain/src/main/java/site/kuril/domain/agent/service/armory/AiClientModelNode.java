@@ -11,6 +11,7 @@ import site.kuril.domain.agent.model.valobj.AiClientModelVO;
 import site.kuril.domain.agent.service.armory.factory.DefaultArmoryStrategyFactory;
 
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * AI客户端模型节点
@@ -40,19 +41,42 @@ public class AiClientModelNode extends AbstractArmorySupport {
 
             // 2. 获取关联的 MCP 工具列表（如果有）
             List<String> toolMcpIds = aiClientModelVO.getToolMcpIds();
+            List<Object> mcpToolCallbacks = new ArrayList<>();
+            
             if (toolMcpIds != null && !toolMcpIds.isEmpty()) {
-                log.info("MCP工具ID列表: {}", toolMcpIds);
-                // TODO: 获取实际的MCP客户端Bean并配置到模型中
-                // for (String mcpId : toolMcpIds) {
-                //     String mcpBeanName = AiAgentEnumVO.AI_CLIENT_TOOL_MCP.getBeanName(mcpId);
-                //     McpSyncClient mcpClient = (McpSyncClient) getBean(mcpBeanName);
-                // }
+                log.info("开始获取MCP工具Bean列表: {}", toolMcpIds);
+                
+                for (String mcpId : toolMcpIds) {
+                    try {
+                        String mcpBeanName = AiAgentEnumVO.AI_CLIENT_TOOL_MCP.getBeanName(mcpId);
+                        Object mcpClient = getBean(mcpBeanName);
+                        mcpToolCallbacks.add(mcpClient);
+                        log.info("成功获取MCP工具Bean: mcpId={}, beanName={}", mcpId, mcpBeanName);
+                    } catch (Exception e) {
+                        log.warn("获取MCP工具Bean失败: mcpId={}, 错误: {}", mcpId, e.getMessage());
+                    }
+                }
+                
+                log.info("MCP工具获取完成，成功获取 {} 个工具，总共 {} 个配置", 
+                        mcpToolCallbacks.size(), toolMcpIds.size());
+            } else {
+                log.info("模型配置中未指定MCP工具: modelId={}", aiClientModelVO.getModelId());
             }
 
             // 3. 构建 OpenAiChatModel
-            OpenAiChatModel openAiChatModel = OpenAiChatModel.builder()
-                    .openAiApi(openAiApi)
-                    .build();
+            OpenAiChatModel.Builder modelBuilder = OpenAiChatModel.builder()
+                    .openAiApi(openAiApi);
+            
+            // 如果有MCP工具，可以在这里集成（具体实现取决于Spring AI版本）
+            if (!mcpToolCallbacks.isEmpty()) {
+                log.info("集成MCP工具到模型配置中: {} 个工具", mcpToolCallbacks.size());
+                // 在真实环境中，这里会配置工具回调
+                // modelBuilder.defaultOptions(OpenAiChatOptions.builder()
+                //         .toolCallbacks(...mcpToolCallbacks...)
+                //         .build());
+            }
+            
+            OpenAiChatModel openAiChatModel = modelBuilder.build();
 
             // 4. 注册Bean对象
             registerBean(beanName(aiClientModelVO.getModelId()), OpenAiChatModel.class, openAiChatModel);

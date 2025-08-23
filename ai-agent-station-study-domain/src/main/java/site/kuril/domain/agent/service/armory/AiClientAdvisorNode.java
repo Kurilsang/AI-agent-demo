@@ -101,8 +101,29 @@ public class AiClientAdvisorNode extends AbstractArmorySupport {
         String advisorType = aiClientAdvisorVO.getAdvisorType();
         AiClientAdvisorTypeEnumVO advisorTypeEnum = AiClientAdvisorTypeEnumVO.getByCode(advisorType);
         
-        // TODO: 此处需要传入真实的VectorStore，暂时传入null
-        return advisorTypeEnum.createAdvisor(aiClientAdvisorVO, null);
+        if (advisorTypeEnum == null) {
+            log.warn("未知的顾问类型: {}", advisorType);
+            return aiClientAdvisorVO; // 返回配置对象作为备选
+        }
+        
+        // 尝试获取VectorStore，如果没有则传入null
+        Object vectorStore = null;
+        try {
+            vectorStore = getBean("vectorStore");
+            log.info("成功获取VectorStore Bean用于创建顾问: {}", advisorType);
+        } catch (Exception e) {
+            log.warn("无法获取VectorStore Bean，将使用null创建顾问: {}", e.getMessage());
+        }
+        
+        // 使用枚举策略创建顾问对象
+        Object advisor = advisorTypeEnum.createAdvisor(aiClientAdvisorVO, vectorStore);
+        
+        log.info("成功创建顾问对象: advisorId={}, advisorType={}, advisorClass={}", 
+                aiClientAdvisorVO.getAdvisorId(), 
+                advisorType, 
+                advisor.getClass().getSimpleName());
+        
+        return advisor;
     }
 
 } 

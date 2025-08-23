@@ -57,6 +57,11 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai</artifactId>
         </dependency>
+        <!-- Spring AI MCP -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client-webflux</artifactId>
+        </dependency>
         <!-- 系统模块 -->
         <dependency>
             <groupId>cn.bugstack.ai</groupId>
