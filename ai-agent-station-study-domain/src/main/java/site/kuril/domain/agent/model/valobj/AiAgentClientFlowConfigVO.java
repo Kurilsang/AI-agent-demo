@@ -1,27 +1,19 @@
-package site.kuril.infrastructure.dao.po;
+package site.kuril.domain.agent.model.valobj;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
+/**
+ * AI智能体客户端流程配置值对象
+ * 用于表示智能体执行流程中的客户端配置信息
+ */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AiAgentFlowConfig {
-
-    /**
-     * 主键ID
-     */
-    private Long id;
-
-    /**
-     * 智能体ID
-     */
-    private String agentId;
+public class AiAgentClientFlowConfigVO {
 
     /**
      * 客户端ID
@@ -39,12 +31,8 @@ public class AiAgentFlowConfig {
     private String clientType;
 
     /**
-     * 序列号(执行顺序)
+     * 执行序列号
      */
     private Integer sequence;
 
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-} 
+}

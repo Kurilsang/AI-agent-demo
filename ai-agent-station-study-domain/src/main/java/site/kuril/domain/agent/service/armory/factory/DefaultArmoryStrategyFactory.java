@@ -17,7 +17,7 @@ import java.util.Map;
 @Component
 public class DefaultArmoryStrategyFactory {
 
-    @Resource
+    @Resource(name = "armoryRootNode")
     private RootNode rootNode;
 
     /**

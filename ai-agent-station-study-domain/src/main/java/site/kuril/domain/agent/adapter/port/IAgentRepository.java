@@ -3,6 +3,7 @@ package site.kuril.domain.agent.adapter.port;
 import site.kuril.domain.agent.model.valobj.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Agent仓储接口
@@ -65,5 +66,12 @@ public interface IAgentRepository {
      * @return 客户端配置列表
      */
     List<AiClientVO> AiClientVOByClientIds(List<String> clientIds);
+
+    /**
+     * 查询AI智能体客户端流程配置
+     * @param aiAgentId AI智能体ID
+     * @return 客户端流程配置Map，key为clientType，value为配置对象
+     */
+    Map<String, AiAgentClientFlowConfigVO> queryAiAgentClientFlowConfig(String aiAgentId);
 
 } 

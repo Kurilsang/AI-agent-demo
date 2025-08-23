@@ -52,7 +52,12 @@
             <groupId>cn.bugstack.wrench</groupId>
             <artifactId>xfg-wrench-starter-design-framework</artifactId>
         </dependency>
-        <!-- Spring AI OpenAI -->
+        <!-- Spring AI Starter Model OpenAI (包含ChatClient) -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+        </dependency>
+        <!-- Spring AI OpenAI (低级别API) -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai</artifactId>

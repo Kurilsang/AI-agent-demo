@@ -21,7 +21,7 @@ import java.util.concurrent.TimeoutException;
  * 当前为简化实现版本
  */
 @Slf4j
-@Service
+@Service("armoryRootNode")
 public class RootNode extends AbstractArmorySupport {
 
     private final Map<String, ILoadDataStrategy> loadDataStrategyMap;

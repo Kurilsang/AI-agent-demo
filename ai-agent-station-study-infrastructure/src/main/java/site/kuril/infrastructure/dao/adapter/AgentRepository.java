@@ -9,6 +9,8 @@ import site.kuril.infrastructure.dao.po.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 import com.alibaba.fastjson2.JSON;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +43,9 @@ public class AgentRepository implements IAgentRepository {
 
     @Resource
     private IAiClientConfigDao aiClientConfigDao;
+
+    @Resource
+    private IAiAgentFlowConfigDao aiAgentFlowConfigDao;
 
     @Override
     public List<AiClientApiVO> queryAiClientApiVOListByClientIds(List<String> clientIds) {
@@ -321,14 +326,108 @@ public class AgentRepository implements IAgentRepository {
     }
 
     private AiClientVO convertToAiClientVO(AiClient po) {
+        String clientId = po.getClientId();
+        
+        // 查询客户端关联的模型Bean名称
+        String modelBeanName = null;
+        List<AiClientConfig> modelConfigs = aiClientConfigDao.queryAll()
+                .stream()
+                .filter(config -> "client".equals(config.getSourceType()) && 
+                                 clientId.equals(config.getSourceId()) &&
+                                 "model".equals(config.getTargetType()) &&
+                                 config.getStatus() == 1)
+                .collect(Collectors.toList());
+        
+        if (!modelConfigs.isEmpty()) {
+            String modelId = modelConfigs.get(0).getTargetId();
+            modelBeanName = AiAgentEnumVO.AI_CLIENT_MODEL.getBeanName(modelId);
+        }
+        
+        // 查询客户端关联的MCP工具Bean名称列表
+        List<String> mcpBeanNameList = aiClientConfigDao.queryAll()
+                .stream()
+                .filter(config -> "client".equals(config.getSourceType()) && 
+                                 clientId.equals(config.getSourceId()) &&
+                                 "mcp".equals(config.getTargetType()) &&
+                                 config.getStatus() == 1)
+                .map(config -> AiAgentEnumVO.AI_CLIENT_TOOL_MCP.getBeanName(config.getTargetId()))
+                .collect(Collectors.toList());
+        
+        // 查询客户端关联的顾问Bean名称列表
+        List<String> advisorBeanNameList = aiClientConfigDao.queryAll()
+                .stream()
+                .filter(config -> "client".equals(config.getSourceType()) && 
+                                 clientId.equals(config.getSourceId()) &&
+                                 "advisor".equals(config.getTargetType()) &&
+                                 config.getStatus() == 1)
+                .map(config -> AiAgentEnumVO.AI_CLIENT_ADVISOR.getBeanName(config.getTargetId()))
+                .collect(Collectors.toList());
+        
+        // 查询客户端关联的提示词ID列表
+        List<String> promptIdList = aiClientConfigDao.queryAll()
+                .stream()
+                .filter(config -> "client".equals(config.getSourceType()) && 
+                                 clientId.equals(config.getSourceId()) &&
+                                 "prompt".equals(config.getTargetType()) &&
+                                 config.getStatus() == 1)
+                .map(AiClientConfig::getTargetId)
+                .collect(Collectors.toList());
+        
         return AiClientVO.builder()
                 .clientId(po.getClientId())
                 .clientName(po.getClientName())
                 .description(po.getDescription())
+                .modelBeanName(modelBeanName)
+                .mcpBeanNameList(mcpBeanNameList.isEmpty() ? null : mcpBeanNameList)
+                .advisorBeanNameList(advisorBeanNameList.isEmpty() ? null : advisorBeanNameList)
+                .promptIdList(promptIdList.isEmpty() ? null : promptIdList)
                 .status(po.getStatus())
                 .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
+    }
+
+    @Override
+    public Map<String, AiAgentClientFlowConfigVO> queryAiAgentClientFlowConfig(String aiAgentId) {
+        if (aiAgentId == null || aiAgentId.trim().isEmpty()) {
+            return new HashMap<>();
+        }
+        
+        try {
+            log.info("查询AI智能体客户端流程配置, aiAgentId: {}", aiAgentId);
+            
+            // 根据智能体ID查询流程配置列表
+            List<AiAgentFlowConfig> flowConfigs = aiAgentFlowConfigDao.queryByAgentId(aiAgentId);
+            
+            if (flowConfigs == null || flowConfigs.isEmpty()) {
+                log.warn("未找到智能体流程配置, aiAgentId: {}", aiAgentId);
+                return new HashMap<>();
+            }
+            
+            // 转换为Map结构，key为clientType，value为AiAgentClientFlowConfigVO
+            Map<String, AiAgentClientFlowConfigVO> result = new HashMap<>();
+            
+            for (AiAgentFlowConfig flowConfig : flowConfigs) {
+                AiAgentClientFlowConfigVO configVO = AiAgentClientFlowConfigVO.builder()
+                        .clientId(flowConfig.getClientId())
+                        .clientName(flowConfig.getClientName())
+                        .clientType(flowConfig.getClientType())
+                        .sequence(flowConfig.getSequence())
+                        .build();
+                
+                result.put(flowConfig.getClientType(), configVO);
+            }
+            
+            log.info("查询AI智能体客户端流程配置完成, aiAgentId: {}, 配置数量: {}", aiAgentId, result.size());
+            return result;
+            
+        } catch (NumberFormatException e) {
+            log.error("智能体ID格式错误: {}", aiAgentId, e);
+            return new HashMap<>();
+        } catch (Exception e) {
+            log.error("查询AI智能体客户端流程配置失败, aiAgentId: {}", aiAgentId, e);
+            return new HashMap<>();
+        }
     }
 
 } 

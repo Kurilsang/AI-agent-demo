@@ -2,6 +2,9 @@ package site.kuril.domain.agent.service.armory;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Service;
 import site.kuril.domain.agent.model.entity.ArmoryCommandEntity;
 import site.kuril.domain.agent.model.valobj.AiAgentEnumVO;
@@ -96,10 +99,10 @@ public class AiClientNode extends AbstractArmorySupport {
             }
 
             // 5. 构建对话客户端
-            Object chatClient = buildChatClient(aiClientVO, chatModel, mcpClients, advisors, defaultSystem.toString());
+            ChatClient chatClient = buildChatClient(aiClientVO, chatModel, mcpClients, advisors, defaultSystem.toString());
             
             // 注册Bean对象
-            registerBean(beanName(aiClientVO.getClientId()), Object.class, chatClient);
+            registerBean(beanName(aiClientVO.getClientId()), ChatClient.class, chatClient);
             
             log.info("成功创建AI客户端: clientId={}, clientName={}, beanName={}, 组件统计[模型:{}, MCP:{}, 顾问:{}]", 
                     aiClientVO.getClientId(), 
@@ -142,55 +145,66 @@ public class AiClientNode extends AbstractArmorySupport {
 
     /**
      * 构建ChatClient对象
-     * 在真实环境中，这里会使用Spring AI的ChatClient.builder()构建
-     * 目前简化实现，返回一个包含所有组件的配置对象
+     * 使用Spring AI的ChatClient.builder()构建真正的ChatClient实例
      */
-    private Object buildChatClient(AiClientVO clientConfig, Object chatModel, List<Object> mcpClients, 
-                                  List<Object> advisors, String systemPrompt) {
+    private ChatClient buildChatClient(AiClientVO clientConfig, Object chatModel, List<Object> mcpClients, 
+                                      List<Object> advisors, String systemPrompt) {
         
-        // 创建一个简化的ChatClient配置对象
-        ChatClientConfig chatClientConfig = new ChatClientConfig();
-        chatClientConfig.setClientConfig(clientConfig);
-        chatClientConfig.setChatModel(chatModel);
-        chatClientConfig.setMcpClients(mcpClients);
-        chatClientConfig.setAdvisors(advisors);
-        chatClientConfig.setSystemPrompt(systemPrompt);
-        
-        log.info("构建ChatClient配置完成: clientId={}, 系统提示词长度={}, 组件数量[模型:{}, MCP:{}, 顾问:{}]",
+        log.info("开始构建ChatClient: clientId={}, 系统提示词长度={}, 组件数量[模型:{}, MCP:{}, 顾问:{}]",
                 clientConfig.getClientId(),
                 systemPrompt.length(),
                 chatModel != null ? 1 : 0,
                 mcpClients.size(),
                 advisors.size());
-        
-        return chatClientConfig;
-    }
 
-    /**
-     * 简化的ChatClient配置类，用于包装所有组件
-     * 在真实环境中，会返回Spring AI的ChatClient对象
-     */
-    public static class ChatClientConfig {
-        private AiClientVO clientConfig;
-        private Object chatModel;
-        private List<Object> mcpClients;
-        private List<Object> advisors;
-        private String systemPrompt;
+        // 1. 如果没有ChatModel，抛出异常
+        if (chatModel == null) {
+            log.error("未找到ChatModel，无法创建ChatClient: clientId={}", clientConfig.getClientId());
+            throw new IllegalStateException("ChatModel is required to create ChatClient for clientId: " + clientConfig.getClientId());
+        }
 
-        // Getters and Setters
-        public AiClientVO getClientConfig() { return clientConfig; }
-        public void setClientConfig(AiClientVO clientConfig) { this.clientConfig = clientConfig; }
+        // 2. 确保chatModel是ChatModel类型
+        if (!(chatModel instanceof ChatModel)) {
+            log.error("ChatModel类型不正确: {}, 期望: ChatModel", chatModel.getClass().getName());
+            throw new IllegalArgumentException("ChatModel type is incorrect: " + chatModel.getClass().getName());
+        }
+
+        ChatModel model = (ChatModel) chatModel;
+
+        // 3. 构建ChatClient.Builder
+        ChatClient.Builder builder = ChatClient.builder(model)
+                .defaultSystem(systemPrompt);
+
+        // 4. 添加顾问角色
+        if (advisors != null && !advisors.isEmpty()) {
+            List<Advisor> advisorList = new ArrayList<>();
+            for (Object advisor : advisors) {
+                if (advisor instanceof Advisor) {
+                    advisorList.add((Advisor) advisor);
+                    log.info("添加顾问角色到ChatClient: {}", advisor.getClass().getSimpleName());
+                } else {
+                    log.warn("顾问角色类型不正确，跳过: {}", advisor.getClass().getName());
+                }
+            }
+            
+            if (!advisorList.isEmpty()) {
+                builder.defaultAdvisors(advisorList.toArray(new Advisor[0]));
+                log.info("成功添加 {} 个顾问角色到ChatClient", advisorList.size());
+            }
+        }
+
+        // 5. MCP工具集成（在模型层面已经处理，这里记录日志）
+        if (mcpClients != null && !mcpClients.isEmpty()) {
+            log.info("MCP工具已在模型层面集成: {} 个工具", mcpClients.size());
+        }
+
+        // 6. 构建ChatClient
+        ChatClient chatClient = builder.build();
         
-        public Object getChatModel() { return chatModel; }
-        public void setChatModel(Object chatModel) { this.chatModel = chatModel; }
+        log.info("ChatClient构建完成: clientId={}, clientName={}", 
+                clientConfig.getClientId(), 
+                clientConfig.getClientName());
         
-        public List<Object> getMcpClients() { return mcpClients; }
-        public void setMcpClients(List<Object> mcpClients) { this.mcpClients = mcpClients; }
-        
-        public List<Object> getAdvisors() { return advisors; }
-        public void setAdvisors(List<Object> advisors) { this.advisors = advisors; }
-        
-        public String getSystemPrompt() { return systemPrompt; }
-        public void setSystemPrompt(String systemPrompt) { this.systemPrompt = systemPrompt; }
+        return chatClient;
     }
 } 
