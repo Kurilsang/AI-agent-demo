@@ -1,14 +1,18 @@
 package site.kuril.domain.agent.service.execute;
 
+import com.alibaba.fastjson2.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 import site.kuril.domain.agent.adapter.port.IAgentRepository;
+import site.kuril.domain.agent.model.entity.AutoAgentExecuteResultEntity;
 import site.kuril.domain.agent.model.entity.ExecuteCommandEntity;
 import site.kuril.domain.agent.service.execute.factory.DefaultAutoAgentExecuteStrategyFactory;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 
 /**
  * 执行抽象支撑类
@@ -121,6 +125,63 @@ public abstract class AbstractExecuteSupport implements DefaultAutoAgentExecuteS
     protected ChatClient getChatClientByClientId(String clientId) {
         String beanName = "ai_client_" + clientId;
         return applicationContext.getBean(beanName, ChatClient.class);
+    }
+
+    // =================
+    // SSE 流式响应支持
+    // =================
+
+    /**
+     * 通用的SSE结果发送方法
+     * @param dynamicContext 动态上下文
+     * @param result 要发送的结果实体
+     */
+    protected void sendSseResult(DefaultAutoAgentExecuteStrategyFactory.DynamicContext dynamicContext, 
+                                AutoAgentExecuteResultEntity result) {
+        try {
+            ResponseBodyEmitter emitter = dynamicContext.getValue("emitter");
+            if (emitter != null) {
+                // 发送SSE格式的数据
+                String sseData = "data: " + JSON.toJSONString(result) + "\n\n";
+                emitter.send(sseData);
+                log.debug("发送SSE数据: type={}, subType={}, step={}, content={}...", 
+                        result.getType(), result.getSubType(), result.getStep(), 
+                        result.getContent() != null && result.getContent().length() > 50 ? 
+                        result.getContent().substring(0, 50) + "..." : result.getContent());
+            }
+        } catch (IOException e) {
+            log.error("发送SSE结果失败：{}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 发送步骤开始通知
+     */
+    protected void sendStepStart(DefaultAutoAgentExecuteStrategyFactory.DynamicContext dynamicContext, 
+                                 String stepName, String sessionId) {
+        AutoAgentExecuteResultEntity result = AutoAgentExecuteResultEntity.createStepStartResult(
+                dynamicContext.getStep(), stepName, sessionId);
+        sendSseResult(dynamicContext, result);
+    }
+
+    /**
+     * 发送步骤完成通知
+     */
+    protected void sendStepComplete(DefaultAutoAgentExecuteStrategyFactory.DynamicContext dynamicContext, 
+                                   String stepName, String sessionId) {
+        AutoAgentExecuteResultEntity result = AutoAgentExecuteResultEntity.createStepCompleteResult(
+                dynamicContext.getStep(), stepName, sessionId);
+        sendSseResult(dynamicContext, result);
+    }
+
+    /**
+     * 发送错误信息
+     */
+    protected void sendError(DefaultAutoAgentExecuteStrategyFactory.DynamicContext dynamicContext, 
+                            String errorMessage, String sessionId) {
+        AutoAgentExecuteResultEntity result = AutoAgentExecuteResultEntity.createErrorResult(
+                dynamicContext.getStep(), errorMessage, sessionId);
+        sendSseResult(dynamicContext, result);
     }
 
 }

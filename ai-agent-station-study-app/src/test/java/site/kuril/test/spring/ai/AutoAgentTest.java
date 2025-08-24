@@ -133,9 +133,16 @@ public class AutoAgentTest {
         // 构建执行命令实体 - 编程任务
         ExecuteCommandEntity executeCommandEntity = ExecuteCommandEntity.builder()
                 .aiAgentId("3")  // AutoAgent智能对话体
-                .message("请帮我创建一个Spring Boot项目，实现用户注册和登录功能，包括数据库设计、实体类、Repository、Service、Controller层的代码实现，以及相应的单元测试。")
+                .message("请使用FileSystem工具在testCreate文件夹中实际创建一个Spring Boot项目的用户注册和登录功能。请创建以下实际文件：\n" +
+                        "1. User.java - 用户实体类\n" +
+                        "2. UserController.java - 用户控制器\n" +
+                        "3. UserService.java - 用户服务层\n" +
+                        "4. UserRepository.java - 用户数据访问层\n" +
+                        "5. UserDto.java - 用户数据传输对象\n" +
+                        "6. UserTest.java - 用户单元测试\n" +
+                        "请使用MCP FileSystem工具将这些文件实际写入到testCreate目录中，包含完整的代码实现。每个文件都要包含完整的Java代码，不要只输出文本。")
                 .sessionId("test-session-programming-" + System.currentTimeMillis())
-                .maxStep(6)  // 编程任务复杂，需要更多步数
+                .maxStep(8)  // 增加步数，因为需要创建多个实际文件
                 .build();
 
         log.info("📋 执行任务: {}", executeCommandEntity.getMessage());
@@ -147,6 +154,40 @@ public class AutoAgentTest {
         
         log.info("✅ AutoAgent执行结果: {}", result);
         log.info("========== 🎉 AutoAgent编程任务测试完成 ==========");
+    }
+
+    @Test
+    public void test_auto_agent_file_creation() throws Exception {
+        log.info("========== 🎯 开始AutoAgent文件创建测试 ==========");
+        
+        // 创建执行策略处理器
+        DefaultAutoAgentExecuteStrategyFactory.StrategyHandler<ExecuteCommandEntity, DefaultAutoAgentExecuteStrategyFactory.DynamicContext, String> executeHandler
+                = defaultAutoAgentExecuteStrategyFactory.armoryStrategyHandler();
+
+        // 构建执行命令实体 - 文件创建任务
+        ExecuteCommandEntity executeCommandEntity = ExecuteCommandEntity.builder()
+                .aiAgentId("3")  // AutoAgent智能对话体
+                .message("请使用MCP FileSystem工具在testCreate文件夹中创建一个简单的Calculator计算器类。\n" +
+                        "具体要求：\n" +
+                        "1. 创建Calculator.java文件，包含add、subtract、multiply、divide方法\n" +
+                        "2. 创建CalculatorTest.java文件，包含对应的单元测试\n" +
+                        "3. 文件要放在testCreate/com/example/calculator/目录下\n" +
+                        "4. 必须使用FileSystem工具实际创建文件，不要只输出代码文本\n" +
+                        "5. 每个文件都要包含完整的Java代码和包声明")
+                .sessionId("test-session-file-creation-" + System.currentTimeMillis())
+                .maxStep(5)  // 文件创建任务，适中步数
+                .build();
+
+        log.info("📋 执行任务: {}", executeCommandEntity.getMessage());
+        log.info("🆔 会话ID: {}", executeCommandEntity.getSessionId());
+        log.info("📊 最大步数: {}", executeCommandEntity.getMaxStep());
+
+        // 执行AutoAgent任务
+        String result = executeHandler.apply(executeCommandEntity, new DefaultAutoAgentExecuteStrategyFactory.DynamicContext());
+        
+        log.info("✅ AutoAgent执行结果: {}", result);
+        log.info("📝 该测试验证了AutoAgent是否能够使用FileSystem工具创建实际文件");
+        log.info("========== 🎉 AutoAgent文件创建测试完成 ==========");
     }
 
     @Test

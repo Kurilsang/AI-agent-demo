@@ -3,6 +3,7 @@ package site.kuril.domain.agent.service.execute;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import site.kuril.domain.agent.model.entity.AutoAgentExecuteResultEntity;
 import org.springframework.stereotype.Service;
 import site.kuril.domain.agent.model.entity.ExecuteCommandEntity;
 import site.kuril.domain.agent.model.valobj.AiAgentClientFlowConfigVO;
@@ -58,8 +59,8 @@ public class Step2PrecisionExecutorNode extends AbstractExecuteSupport {
                         .param("CHAT_MEMORY_RETRIEVE_SIZE", 1024))
                 .call().content();
 
-        // 解析执行结果
-        parseExecutionResult(dynamicContext.getStep(), executionResult);
+        // 解析执行结果并发送SSE
+        parseExecutionResult(dynamicContext, executionResult, requestParameter.getSessionId());
         
         // 将执行结果保存到动态上下文中
         dynamicContext.setValue("executionResult", executionResult);
@@ -109,13 +110,21 @@ public class Step2PrecisionExecutorNode extends AbstractExecuteSupport {
     }
     
     /**
-     * 解析执行结果
+     * 解析执行结果并发送SSE
      */
-    private void parseExecutionResult(int step, String executionResult) {
+    private void parseExecutionResult(DefaultAutoAgentExecuteStrategyFactory.DynamicContext dynamicContext, 
+                                    String executionResult, String sessionId) {
+        int step = dynamicContext.getStep();
         log.info("\n⚡ === 第 {} 步执行结果 ===", step);
+        log.info("{}", executionResult);
         
+        // 先发送完整的执行结果
+        sendExecutionSubResult(dynamicContext, "execution_process", executionResult, sessionId);
+        
+        // 解析不同部分并分别发送
         String[] lines = executionResult.split("\n");
         String currentSection = "";
+        StringBuilder sectionContent = new StringBuilder();
         
         for (String line : lines) {
             line = line.trim();
@@ -123,22 +132,34 @@ public class Step2PrecisionExecutorNode extends AbstractExecuteSupport {
             
             // 识别不同的执行部分
             if (line.contains("执行目标:")) {
+                // 发送上一个section
+                sendExecutionSubResult(dynamicContext, getExecutionSubType(currentSection), sectionContent.toString(), sessionId);
                 currentSection = "target";
+                sectionContent = new StringBuilder();
                 log.info("\n🎯 执行目标:");
                 continue;
             } else if (line.contains("执行过程:")) {
+                sendExecutionSubResult(dynamicContext, getExecutionSubType(currentSection), sectionContent.toString(), sessionId);
                 currentSection = "process";
+                sectionContent = new StringBuilder();
                 log.info("\n🔧 执行过程:");
                 continue;
             } else if (line.contains("执行结果:")) {
+                sendExecutionSubResult(dynamicContext, getExecutionSubType(currentSection), sectionContent.toString(), sessionId);
                 currentSection = "result";
+                sectionContent = new StringBuilder();
                 log.info("\n📈 执行结果:");
                 continue;
             } else if (line.contains("质量检查:")) {
+                sendExecutionSubResult(dynamicContext, getExecutionSubType(currentSection), sectionContent.toString(), sessionId);
                 currentSection = "quality";
+                sectionContent = new StringBuilder();
                 log.info("\n🔍 质量检查:");
                 continue;
             }
+            
+            // 收集内容
+            sectionContent.append(line).append("\n");
             
             // 输出具体内容
             switch (currentSection) {
@@ -155,9 +176,39 @@ public class Step2PrecisionExecutorNode extends AbstractExecuteSupport {
                     log.info("   ✅ {}", line);
                     break;
                 default:
-                    log.info("   📝 {}", line);
+                    if (!currentSection.isEmpty()) {
+                        log.info("   📝 {}", line);
+                    }
                     break;
             }
+        }
+        
+        // 发送最后一个section
+        sendExecutionSubResult(dynamicContext, getExecutionSubType(currentSection), sectionContent.toString(), sessionId);
+    }
+    
+    /**
+     * 获取执行阶段子类型
+     */
+    private String getExecutionSubType(String section) {
+        switch (section) {
+            case "target": return "execution_target";
+            case "process": return "execution_process";
+            case "result": return "execution_result";
+            case "quality": return "execution_quality";
+            default: return "execution_process";
+        }
+    }
+    
+    /**
+     * 发送执行阶段细分结果到流式输出
+     */
+    private void sendExecutionSubResult(DefaultAutoAgentExecuteStrategyFactory.DynamicContext dynamicContext, 
+                                      String subType, String content, String sessionId) {
+        if (!content.trim().isEmpty()) {
+            AutoAgentExecuteResultEntity result = AutoAgentExecuteResultEntity.createExecutionSubResult(
+                    dynamicContext.getStep(), subType, content.trim(), sessionId);
+            sendSseResult(dynamicContext, result);
         }
     }
 

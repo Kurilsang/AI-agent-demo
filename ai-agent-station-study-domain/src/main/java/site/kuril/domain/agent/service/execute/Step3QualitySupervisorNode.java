@@ -3,6 +3,7 @@ package site.kuril.domain.agent.service.execute;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import site.kuril.domain.agent.model.entity.AutoAgentExecuteResultEntity;
 import org.springframework.stereotype.Service;
 import site.kuril.domain.agent.model.entity.ExecuteCommandEntity;
 import site.kuril.domain.agent.model.valobj.AiAgentClientFlowConfigVO;
@@ -58,8 +59,8 @@ public class Step3QualitySupervisorNode extends AbstractExecuteSupport {
                         .param("CHAT_MEMORY_RETRIEVE_SIZE", 1024))
                 .call().content();
 
-        // 解析监督结果
-        parseSupervisionResult(dynamicContext.getStep(), supervisionResult);
+        // 解析监督结果并发送SSE
+        parseSupervisionResult(dynamicContext, supervisionResult, requestParameter.getSessionId());
         
         // 将监督结果保存到动态上下文中
         dynamicContext.setValue("supervisionResult", supervisionResult);
@@ -121,36 +122,32 @@ public class Step3QualitySupervisorNode extends AbstractExecuteSupport {
     /**
      * 解析监督结果
      */
-    private void parseSupervisionResult(int step, String supervisionResult) {
+    private void parseSupervisionResult(DefaultAutoAgentExecuteStrategyFactory.DynamicContext dynamicContext, 
+                                      String supervisionResult, String sessionId) {
+        int step = dynamicContext.getStep();
         log.info("\n🔍 === 第 {} 步监督结果 ===", step);
+        log.info("{}", supervisionResult);
         
+        // 先发送完整的监督结果
+        sendSupervisionSubResult(dynamicContext, "assessment", supervisionResult, sessionId);
+        
+        // 简化版本解析 - 确保所有内容都能发送
         String[] lines = supervisionResult.split("\n");
-        String currentSection = "";
-        
         for (String line : lines) {
             line = line.trim();
             if (line.isEmpty()) continue;
             
-            // 识别不同的监督部分
-            if (line.contains("质量评估:")) {
-                currentSection = "assessment";
-                log.info("\n📊 质量评估:");
-                continue;
-            } else if (line.contains("问题识别:")) {
-                currentSection = "issues";
-                log.info("\n⚠️ 问题识别:");
-                continue;
-            } else if (line.contains("改进建议:")) {
-                currentSection = "suggestions";
-                log.info("\n💡 改进建议:");
-                continue;
-            } else if (line.contains("质量评分:")) {
-                String score = line.substring(line.indexOf(":") + 1).trim();
+            // 检查质量评分
+            if (line.contains("质量评分:") || line.contains("评分:")) {
+                String score = extractAfterColon(line);
                 log.info("\n📊 质量评分: {}", score);
-                continue;
-            } else if (line.contains("是否通过:")) {
-                String status = line.substring(line.indexOf(":") + 1).trim();
-                switch (status) {
+                sendSupervisionSubResult(dynamicContext, "score", "质量评分: " + score, sessionId);
+            }
+            
+            // 检查通过状态
+            if (line.contains("是否通过:") || line.contains("通过:")) {
+                String status = extractAfterColon(line);
+                switch (status.toUpperCase()) {
                     case "PASS":
                         log.info("\n✅ 检查结果: 通过");
                         break;
@@ -164,24 +161,31 @@ public class Step3QualitySupervisorNode extends AbstractExecuteSupport {
                         log.info("\n❓ 检查结果: {}", status);
                         break;
                 }
-                continue;
+                sendSupervisionSubResult(dynamicContext, "pass", "检查结果: " + status, sessionId);
             }
-            
-            // 输出具体内容
-            switch (currentSection) {
-                case "assessment":
-                    log.info("   📋 {}", line);
-                    break;
-                case "issues":
-                    log.info("   ⚠️ {}", line);
-                    break;
-                case "suggestions":
-                    log.info("   💡 {}", line);
-                    break;
-                default:
-                    log.info("   📝 {}", line);
-                    break;
-            }
+        }
+    }
+    
+    /**
+     * 提取冒号后的内容
+     */
+    private String extractAfterColon(String line) {
+        int colonIndex = line.indexOf(":");
+        if (colonIndex != -1 && colonIndex < line.length() - 1) {
+            return line.substring(colonIndex + 1).trim();
+        }
+        return line;
+    }
+    
+    /**
+     * 发送监督阶段细分结果到流式输出
+     */
+    private void sendSupervisionSubResult(DefaultAutoAgentExecuteStrategyFactory.DynamicContext dynamicContext, 
+                                        String subType, String content, String sessionId) {
+        if (!content.trim().isEmpty()) {
+            AutoAgentExecuteResultEntity result = AutoAgentExecuteResultEntity.createSupervisionSubResult(
+                    dynamicContext.getStep(), subType, content.trim(), sessionId);
+            sendSseResult(dynamicContext, result);
         }
     }
 

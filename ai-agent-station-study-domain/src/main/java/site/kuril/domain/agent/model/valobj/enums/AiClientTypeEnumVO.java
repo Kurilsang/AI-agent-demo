@@ -15,6 +15,7 @@ public enum AiClientTypeEnumVO {
     TASK_ANALYZER_CLIENT("TASK_ANALYZER_CLIENT", "任务分析客户端", "专业的任务分析师，负责分析任务状态和制定执行策略"),
     PRECISION_EXECUTOR_CLIENT("PRECISION_EXECUTOR_CLIENT", "精准执行客户端", "精准任务执行器，负责严格按照策略执行具体任务"),
     QUALITY_SUPERVISOR_CLIENT("QUALITY_SUPERVISOR_CLIENT", "质量监督客户端", "专业的质量监督员，负责监督和评估执行质量"),
+    RESPONSE_ASSISTANT("RESPONSE_ASSISTANT", "智能响应助手", "智能响应助手，负责响应式处理和最终结果输出"),
     ;
 
     private final String code;

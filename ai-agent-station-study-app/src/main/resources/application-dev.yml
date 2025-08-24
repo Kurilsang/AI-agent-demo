@@ -54,6 +54,10 @@ spring:
       pgvector:
         table-name: vector_store_openai
         schema-name: public
+    agent:
+      auto-config:
+        enabled: true
+        client-ids: 3101,3102,3103,3104  # 🤖 自动装配AI客户端ID列表
   # WebClient全局超时配置
   webflux:
     timeout: 60s  # 🕒 WebFlux响应式客户端超时设置
