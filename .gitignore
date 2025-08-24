@@ -38,5 +38,5 @@ build/
 .DS_Store
 /.idea/
 
-.log
-.gz
+*.log
+*.gz
