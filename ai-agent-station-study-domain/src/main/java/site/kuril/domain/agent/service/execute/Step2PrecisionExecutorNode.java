@@ -3,6 +3,8 @@ package site.kuril.domain.agent.service.execute;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
+import io.modelcontextprotocol.client.McpSyncClient;
 import site.kuril.domain.agent.model.entity.AutoAgentExecuteResultEntity;
 import org.springframework.stereotype.Service;
 import site.kuril.domain.agent.model.entity.ExecuteCommandEntity;
@@ -45,15 +47,25 @@ public class Step2PrecisionExecutorNode extends AbstractExecuteSupport {
 
         ChatClient chatClient = getChatClientByClientId(executorConfig.getClientId());
 
+        // 获取MCP客户端用于工具调用
+        McpSyncClient[] mcpClients = getMcpClientsForClient(executorConfig.getClientId());
+        
         // 执行具体任务
         log.info("🔧 开始精准任务执行...");
+        OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
+                .model("gpt-4o")
+                .maxTokens(4000)
+                .temperature(0.5);
+        
+        // 如果有MCP客户端，配置工具回调
+        if (mcpClients.length > 0) {
+            log.info("🛠️ 配置{}个MCP工具回调", mcpClients.length);
+            optionsBuilder.toolCallbacks(new SyncMcpToolCallbackProvider(mcpClients).getToolCallbacks());
+        }
+        
         String executionResult = chatClient
                 .prompt(executionPrompt)
-                .options(OpenAiChatOptions.builder()
-                        .model("gpt-4o")
-                        .maxTokens(4000)
-                        .temperature(0.5)
-                        .build())
+                .options(optionsBuilder.build())
                 .advisors(a -> a
                         .param("CHAT_MEMORY_CONVERSATION_ID", requestParameter.getSessionId())
                         .param("CHAT_MEMORY_RETRIEVE_SIZE", 1024))
@@ -87,11 +99,24 @@ public class Step2PrecisionExecutorNode extends AbstractExecuteSupport {
                 
                 **执行指令:** 根据上述分析师的策略，执行具体的任务步骤。
                 
-                **执行要求:**
-                1. 严格按照策略执行
-                2. 使用必要的工具
-                3. 确保执行质量
-                4. 详细记录过程
+                **🔧 可用工具说明:**
+                - **FileSystem工具**: 用于创建、读取、写入文件（如创建.txt、.md、.java等文件）
+                - **CSDN文章发布工具**: 用于将文章发布到CSDN平台并返回真实的文章URL
+                - **其他工具**: 根据任务需要调用相应的工具
+                
+                **⚠️ 重要执行要求:**
+                1. **必须实际使用工具**: 不能只描述过程，必须真正调用相应的工具
+                2. **必须返回真实结果**: 如果涉及文件创建或文章发布，必须返回实际的文件路径或URL
+                3. **工具调用优先**: 如果任务涉及文件操作或发布操作，优先使用相应的MCP工具
+                4. **严格按照策略执行**: 完全按照分析师的策略执行，不要跳过任何步骤
+                
+                **📋 特别注意:**
+                - 如果任务是"写文章并发布到CSDN"，必须：
+                  1. 使用FileSystem工具创建实际的文章文件（.md或.txt格式）
+                  2. 使用CSDN发布工具将文章发布并获取真实的URL
+                  3. 在执行结果中提供真实的文件路径和CSDN文章链接
+                - 禁止使用占位符如"[待填写链接]"或"[链接示例]"
+                - 必须提供可验证的实际结果
                 
                 **请严格按照以下格式输出:**
                 
@@ -99,13 +124,13 @@ public class Step2PrecisionExecutorNode extends AbstractExecuteSupport {
                 [明确的执行目标]
                 
                 **执行过程:**
-                [详细的执行步骤和使用的工具]
+                [详细的执行步骤，包括实际调用的工具和参数]
                 
                 **执行结果:**
-                [具体的执行成果和获得的信息]
+                [具体的执行成果，包括真实的文件路径、URL等]
                 
                 **质量检查:**
-                [对执行结果的自我质量评估]
+                [对执行结果的自我质量评估，确认工具调用成功]
                 """, analysisResult);
     }
     
@@ -245,6 +270,47 @@ public class Step2PrecisionExecutorNode extends AbstractExecuteSupport {
         }
         
         return summary;
+    }
+    
+    /**
+     * 获取指定客户端的MCP客户端
+     */
+    private McpSyncClient[] getMcpClientsForClient(String clientId) {
+        try {
+            java.util.List<McpSyncClient> mcpClientList = new java.util.ArrayList<>();
+            
+            // 对于客户端3102，它有CSDN和FileSystem两个工具
+            if ("3102".equals(clientId)) {
+                // 尝试获取CSDN MCP客户端 (bean名称: ai_client_tool_mcp_5001)
+                try {
+                    Object csdnBean = getBean("ai_client_tool_mcp_5001");
+                    if (csdnBean instanceof McpSyncClient) {
+                        McpSyncClient csdnClient = (McpSyncClient) csdnBean;
+                        mcpClientList.add(csdnClient);
+                        log.info("✅ 成功获取CSDN MCP客户端");
+                    }
+                } catch (Exception e) {
+                    log.warn("⚠️ 无法获取CSDN MCP客户端: {}", e.getMessage());
+                }
+                
+                // 尝试获取FileSystem MCP客户端 (bean名称: ai_client_tool_mcp_5003) 
+                try {
+                    Object fileSystemBean = getBean("ai_client_tool_mcp_5003");
+                    if (fileSystemBean instanceof McpSyncClient) {
+                        McpSyncClient fileSystemClient = (McpSyncClient) fileSystemBean;
+                        mcpClientList.add(fileSystemClient);
+                        log.info("✅ 成功获取FileSystem MCP客户端");
+                    }
+                } catch (Exception e) {
+                    log.warn("⚠️ 无法获取FileSystem MCP客户端: {}", e.getMessage());
+                }
+            }
+            
+            return mcpClientList.toArray(new McpSyncClient[0]);
+        } catch (Exception e) {
+            log.error("❌ 获取MCP客户端时出错: {}", e.getMessage());
+            return new McpSyncClient[0];
+        }
     }
 
 }

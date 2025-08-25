@@ -255,20 +255,31 @@ public class Step1AnalyzerNode extends AbstractExecuteSupport {
                                  analysisResult.contains("进度: 100%") ||
                                  analysisResult.contains("100%");
         
-        // 检查明确的完成指示词
-        boolean explicitCompletion = analysisResult.contains("任务已完成") ||
-                                   analysisResult.contains("任务完成") ||
-                                   analysisResult.contains("已完成") ||
-                                   analysisResult.contains("FINISHED") ||
+        // 检查明确的完成指示词（更加严格，避免描述性文字误判）
+        boolean explicitCompletion = analysisResult.contains("整体任务已完成") ||
+                                   analysisResult.contains("用户任务已完成") ||
+                                   analysisResult.contains("主要任务完成") ||
+                                   analysisResult.contains("所有目标完成") ||
+                                   analysisResult.contains("TASK FINISHED") ||
                                    analysisResult.contains("无需进一步操作") ||
                                    analysisResult.contains("任务目标已完全实现") ||
-                                   analysisResult.contains("无需进一步") ||
                                    analysisResult.contains("停止后续步骤");
         
         // 如果完成度为100%，强制判定为完成（防止AI逻辑矛盾）
         if (progressComplete) {
             log.info("🎯 检测到完成度100%，强制判定任务完成");
             return true;
+        }
+        
+        // 额外检查：如果完成度明确为0%，无论如何都不应该完成
+        boolean zeroProgress = analysisResult.contains("完成度评估: ** 0%") ||
+                             analysisResult.contains("完成度评估: 0%") ||
+                             analysisResult.contains("完成度: 0%") ||
+                             analysisResult.contains("进度: 0%");
+        
+        if (zeroProgress) {
+            log.info("🚫 检测到完成度0%，强制判定任务未完成");
+            return false;
         }
         
         boolean isCompleted = statusCompleted || explicitCompletion;

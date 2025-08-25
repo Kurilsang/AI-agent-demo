@@ -1,7 +1,7 @@
 -- ================================================================
 -- AI Agent Station 完整数据库初始化脚本
 -- 基于现有代码结构和测试数据重新构建
--- 版本: 2025.08.25.v2 (修复AutoAgent流程配置缺失问题)
+-- 版本: 2025.08.25.v3 - 添加CSDN文章发布工具支持 (修复AutoAgent流程配置缺失问题)
 -- 目标: 创建一个可直接运行的完整数据库，支持所有AI Agent功能
 -- 修复: 添加智能体3流程配置清理逻辑，确保Docker MySQL环境正常运行
 -- ================================================================
@@ -218,8 +218,8 @@ INSERT INTO `ai_client_model` (`model_id`, `api_id`, `model_name`, `model_type`,
 
 -- 3.5 MCP工具配置 (注意：使用正确的npx完整路径和JSON格式)
 INSERT INTO `ai_client_tool_mcp` (`mcp_id`, `mcp_name`, `transport_type`, `transport_config`, `request_timeout`, `status`, `create_time`, `update_time`) VALUES 
-('5001', 'CSDN文章发布工具', 'sse', '{"baseUri":"http://127.0.0.1:8102","sseEndpoint":"/sse","description":"用于发布文章到CSDN平台"}', 180, 1, NOW(), NOW()),
-('5002', '微信公众号通知工具', 'sse', '{"baseUri":"http://127.0.0.1:8101","sseEndpoint":"/sse","description":"用于发送微信公众号消息通知"}', 180, 1, NOW(), NOW()),
+('5001', 'CSDN文章发布工具', 'sse', '{"baseUri":"http://127.0.0.1:8101","sseEndpoint":"/sse","description":"用于发布文章到CSDN平台"}', 180, 1, NOW(), NOW()),
+('5002', '微信公众号通知工具', 'sse', '{"baseUri":"http://127.0.0.1:8102","sseEndpoint":"/sse","description":"用于发送微信公众号消息通知"}', 180, 1, NOW(), NOW()),
 ('5003', 'FileSystem文件操作工具', 'stdio', '{"stdio":{"filesystem":{"command":"D:/Develop/nodeJs/npx.cmd","args":["-y","@modelcontextprotocol/server-filesystem","D:/Develop/Projects/xfg/ai-agent-station-study-3-3-agent-case/ai-agent-station-study-3-3-agent-case","D:/Develop/Projects/xfg/ai-agent-station-study-3-3-agent-case/ai-agent-station-study-3-3-agent-case"],"env":{"NODE_ENV":"production"}}}}', 180, 1, NOW(), NOW()),
 ('5004', 'Google搜索工具', 'stdio', '{"stdio":{"g-search":{"command":"D:/Develop/nodeJs/npx.cmd","args":["-y","g-search-mcp"],"env":{"NODE_ENV":"production"}}}}', 180, 1, NOW(), NOW()),
 ('5005', '高德地图工具', 'sse', '{"baseUri":"https://mcp.amap.com","sseEndpoint":"/sse?key=801aabf79ed055c2ff78603cfe851787"}', 180, 1, NOW(), NOW());
@@ -392,6 +392,7 @@ INSERT INTO `ai_client_config` (`source_type`, `source_id`, `target_type`, `targ
 ('client', '3102', 'prompt', '4102', '{"primary":true}', 1, NOW(), NOW()),
 ('client', '3102', 'advisor', '6001', '{"order":1}', 1, NOW(), NOW()),
 ('client', '3102', 'mcp', '5003', '{"order":1,"description":"文件操作工具"}', 1, NOW(), NOW()),
+('client', '3102', 'mcp', '5001', '{"order":2,"description":"CSDN文章发布工具"}', 1, NOW(), NOW()),
 
 ('client', '3103', 'api', '1001', '{"priority":1}', 1, NOW(), NOW()),
 ('client', '3103', 'model', '2001', '{"priority":1}', 1, NOW(), NOW()),
