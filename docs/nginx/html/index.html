@@ -10,280 +10,107 @@
     <script src="js/highlight.min.js"></script>
     <link rel="stylesheet" href="css/github.min.css">
     <link rel="stylesheet" href="css/css2.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            200: '#bae6fd',
-                            300: '#7dd3fc',
-                            400: '#38bdf8',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                        },
-                        accent: {
-                            50: '#fdf4ff',
-                            100: '#fae8ff',
-                            200: '#f5d0fe',
-                            300: '#f0abfc',
-                            400: '#e879f9',
-                            500: '#d946ef',
-                            600: '#c026d3',
-                            700: '#a21caf',
-                            800: '#86198f',
-                            900: '#701a75',
-                        },
-                        success: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        /* 全局样式优化 */
+        /* 暖色调全局样式 */
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             min-height: 100vh;
         }
 
-        /* 自定义样式 */
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .gradient-border {
-            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c);
-            padding: 2px;
-            border-radius: 12px;
-        }
-
-        .gradient-border > div {
-            background: white;
-            border-radius: 10px;
-        }
-
+        /* 阶段指示器 */
         .stage-indicator {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 11px;
             font-weight: 600;
-            margin-right: 8px;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin-right: 6px;
             color: white;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
-        .stage-analysis {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-        }
-
-        .stage-execution {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
-        }
-
-        .stage-supervision {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-        }
-
-        .stage-summary {
-            background: linear-gradient(135deg, #10b981, #059669);
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-        }
-
-        .stage-error {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-        }
+        .stage-analysis { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+        .stage-execution { background: linear-gradient(135deg, #059669, #0d9488); }
+        .stage-supervision { background: linear-gradient(135deg, #ea580c, #dc2626); }
+        .stage-summary { background: linear-gradient(135deg, #0284c7, #0369a1); }
+        .stage-error { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .stage-complete { background: linear-gradient(135deg, #059669, #047857); }
 
         .sub-type-indicator {
             display: inline-block;
             padding: 2px 8px;
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 10px;
-            font-weight: 500;
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
             margin-left: 4px;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-            color: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(102, 126, 234, 0.2);
+            backdrop-filter: blur(10px);
         }
 
+        /* Markdown样式 */
         .markdown-content {
-            margin-top: 8px;
-            line-height: 1.7;
+            line-height: 1.6;
+            color: #374151;
+            font-size: 13px;
         }
 
-        .markdown-content h1,
-        .markdown-content h2,
-        .markdown-content h3,
-        .markdown-content h4,
-        .markdown-content h5,
-        .markdown-content h6 {
-            margin: 20px 0 10px 0;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .markdown-content h1, .markdown-content h2, 
+        .markdown-content h3, .markdown-content h4 {
+            color: #1f2937;
+            margin: 20px 0 12px 0;
+            font-weight: 600;
         }
 
         .markdown-content h1 { font-size: 1.6em; }
-        .markdown-content h2 { font-size: 1.4em; }
-        .markdown-content h3 { font-size: 1.3em; }
-        .markdown-content h4 { font-size: 1.2em; }
+        .markdown-content h2 { font-size: 1.4em; color: #4f46e5; }
+        .markdown-content h3 { font-size: 1.3em; color: #7c3aed; }
 
-        .markdown-content p {
-            margin: 10px 0;
-            color: #4a5568;
+                .markdown-content p { 
+            margin: 8px 0; 
+            line-height: 1.6;
         }
-
-        .markdown-content ul,
-        .markdown-content ol {
-            margin: 10px 0;
-            padding-left: 24px;
+        .markdown-content ul, .markdown-content ol { 
+            margin: 8px 0; 
+            padding-left: 20px; 
         }
 
         .markdown-content li {
-            margin: 6px 0;
-            color: #4a5568;
-        }
-
-        .markdown-content blockquote {
-            border-left: 4px solid #667eea;
-            margin: 20px 0;
-            padding: 12px 20px;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-            color: #4a5568;
-            font-style: italic;
-            border-radius: 0 8px 8px 0;
+            margin: 4px 0;
+            line-height: 1.5;
         }
 
         .markdown-content code {
-            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
             padding: 3px 6px;
             border-radius: 4px;
-            font-family: 'Fira Code', 'Courier New', monospace;
             font-size: 0.9em;
-            color: #667eea;
-            border: 1px solid rgba(102, 126, 234, 0.2);
+            color: #7c3aed;
+            border: 1px solid #e2e8f0;
         }
 
         .markdown-content pre {
-            background: linear-gradient(135deg, #1a202c, #2d3748);
-            border: 1px solid #4a5568;
+            background: linear-gradient(135deg, #1e293b, #334155);
             border-radius: 8px;
-            padding: 20px;
+            padding: 16px;
             overflow-x: auto;
-            margin: 20px 0;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            margin: 12px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .markdown-content pre code {
             background: none;
             padding: 0;
             color: #e2e8f0;
-            font-size: 0.85em;
             border: none;
         }
 
-        .markdown-content table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 20px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .markdown-content th,
-        .markdown-content td {
-            border: 1px solid #e2e8f0;
-            padding: 12px 16px;
-            text-align: left;
-        }
-
-        .markdown-content th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+        .markdown-content strong { 
             font-weight: 600;
+            color: #4f46e5;
         }
 
-        .markdown-content a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .markdown-content a:hover {
-            color: #764ba2;
-            text-decoration: underline;
-        }
-
-        .markdown-content strong {
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .markdown-content em {
-            font-style: italic;
-            color: #718096;
-        }
-
-        @keyframes messageSlideIn {
-            from { 
-                opacity: 0; 
-                transform: translateY(20px) scale(0.95); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0) scale(1); 
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .message {
-            animation: messageSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .loading-pulse {
-            animation: pulse 2s infinite;
-        }
-
-        /* 滚动条样式 */
+        /* 美化滚动条 */
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
         }
@@ -296,192 +123,301 @@
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: linear-gradient(135deg, #667eea, #764ba2);
             border-radius: 4px;
-            transition: all 0.2s;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #5a6fd8, #6a4190);
+            background: linear-gradient(135deg, #5a67d8, #6b46c1);
         }
 
-        .custom-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: #667eea transparent;
+        /* 动画效果 */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 按钮增强样式 */
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none;
-            color: white;
+
+
+        .message {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* 消息类型样式 */
+        .message-thinking {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 4px solid #4f46e5;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .message-result {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 4px solid #059669;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .message-user {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 4px solid #ea580c;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .message-error {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 4px solid #dc2626;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
             font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            font-size: 14px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #5a6fd8, #6a4190);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            background: linear-gradient(135deg, #4338ca, #6d28d9);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
-            border: 2px solid rgba(102, 126, 234, 0.3);
-            color: #667eea;
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.9);
+            color: #4f46e5;
+            border: 1px solid rgba(79, 70, 229, 0.3);
             backdrop-filter: blur(10px);
         }
 
         .btn-secondary:hover {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
         }
 
-        /* 输入框增强样式 */
-        .input-enhanced {
-            background: rgba(255, 255, 255, 0.95);
-            border: 2px solid rgba(102, 126, 234, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .btn-danger {
+            background: rgba(255, 255, 255, 0.9);
+            color: #dc2626;
+            border: 1px solid rgba(220, 38, 38, 0.3);
             backdrop-filter: blur(10px);
         }
 
-        .input-enhanced:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        .btn-danger:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+        }
+
+        /* 输入框样式 */
+        .input {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
             background: rgba(255, 255, 255, 1);
         }
 
-        /* 卡片样式增强 */
-        .card-enhanced {
+        /* 卡片样式 */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+        }
+
+
+
+        /* 标签样式 */
+        .tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .tab.active {
+            color: #4f46e5;
+            border-color: #4f46e5;
+            background: rgba(79, 70, 229, 0.08);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+        }
+
+        .tab:hover {
+            color: #4f46e5;
+            background: rgba(79, 70, 229, 0.04);
+            border-color: rgba(79, 70, 229, 0.3);
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .card-enhanced:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        .chat-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 4px 8px;
+            border-left: 3px solid transparent;
         }
 
-        /* 头部增强 */
-        .header-enhanced {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+        .chat-item:hover {
+            background: rgba(79, 70, 229, 0.05);
+            border-left-color: #4f46e5;
         }
 
-        /* 状态指示器 */
-        .status-indicator {
-            background: linear-gradient(135deg, #10b981, #059669);
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        .chat-item.active {
+            background: rgba(79, 70, 229, 0.1);
+            border-left-color: #4f46e5;
+            color: #4f46e5;
         }
+
+
     </style>
 </head>
-<body class="h-screen flex flex-col font-sans">
-<!-- Top Navigation -->
-<nav class="header-enhanced px-6 py-4 flex items-center gap-4 sticky top-0 z-30">
-    <div class="flex items-center gap-4">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span class="text-white font-bold text-lg">🤖</span>
-            </div>
-            <div>
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
-                    AI Auto Agent
-                </h1>
-                <p class="text-sm text-gray-500 font-medium">智能对话助手</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="flex-1 flex items-center justify-center">
-        <div class="flex items-center gap-3 text-gray-600">
-            <span class="status-indicator w-3 h-3 rounded-full animate-pulse"></span>
-            <span class="font-medium bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
-                实时流式交互体验
-            </span>
-            <span class="text-xl">✨</span>
-        </div>
-    </div>
-
-    <div class="flex items-center gap-3">
-        <button id="newChatBtn" class="btn-secondary flex items-center gap-2 px-4 py-2 text-sm rounded-xl transition-all duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<body class="h-screen">
+<div class="h-screen flex overflow-hidden p-4 gap-4">
+    <!-- 左侧控制面板 -->
+    <aside class="w-80 sidebar rounded-xl overflow-y-auto custom-scrollbar">
+        <div class="p-4">
+            <!-- 对话管理 -->
+            <div class="mb-5">
+                <h2 class="font-bold mb-3 text-lg text-gray-900 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    对话管理
+                </h2>
+                
+                <!-- 对话操作按钮 -->
+                <div class="flex gap-2 mb-4">
+                    <button id="newChatBtn" class="btn btn-secondary flex items-center gap-2 text-sm flex-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
             新建对话
         </button>
-
-        <button id="clearAllChatsBtn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-white/90 border border-red-300 rounded-xl hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300 backdrop-filter backdrop-blur-10">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button id="clearAllChatsBtn" class="btn btn-danger flex items-center gap-2 text-sm flex-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
             </svg>
-            清空对话
+                        清空
         </button>
     </div>
-</nav>
-
-<div class="flex-1 flex overflow-hidden px-6 pb-6 gap-6">
-    <!-- 侧边栏 -->
-    <aside id="sidebar" class="w-72 card-enhanced rounded-2xl overflow-y-auto transition-all duration-300 ease-in-out custom-scrollbar">
-        <div class="p-6">
-            <h2 class="font-bold mb-4 text-xl bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                对话历史
-            </h2>
-            <ul id="chatList" class="space-y-2">
+                
                 <!-- 对话历史列表 -->
+                <ul id="chatList" class="space-y-1">
+                    <!-- 对话历史列表将在这里动态生成 -->
+                    <li class="chat-item">
+                        <div class="font-medium text-sm text-gray-800">当前对话</div>
+                        <div class="text-xs text-gray-500 mt-1">点击开始新对话</div>
+                    </li>
             </ul>
+            </div>
+            
+            <!-- 视图切换 -->
+            <div class="mb-5">
+                <h3 class="font-semibold mb-3 text-base text-gray-900 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    视图切换
+                </h3>
+                <div class="space-y-2">
+                    <div class="tab active w-full text-left p-3 rounded-lg" id="chatTab" onclick="switchTab('chat')">
+                        💬 对话记录
+                    </div>
+                    <div class="tab w-full text-left p-3 rounded-lg" id="processTab" onclick="switchTab('process')">
+                        🧠 思考过程
+                    </div>
+                </div>
+            </div>
         </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- 主对话区域 -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- 双面板内容区域 -->
-        <div class="flex-1 flex overflow-hidden gap-6">
-            <!-- 左侧思考过程面板 -->
-            <div class="w-1/2 flex flex-col card-enhanced rounded-2xl overflow-hidden">
-                <div class="px-6 py-4 bg-gradient-to-r from-primary-50 to-accent-50 border-b border-gray-200 flex items-center gap-3">
-                    <span class="text-2xl">🧠</span>
-                    <h3 class="font-bold text-lg bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">AI思考执行过程</h3>
+        <!-- 消息展示区域 -->
+        <div class="flex-1 card overflow-hidden">
+            <!-- 对话记录面板 -->
+            <div id="chatPanel" class="h-full flex flex-col">
+                <div class="p-4 border-b bg-gradient-to-r from-indigo-50 to-purple-50">
+                    <h3 class="font-bold text-lg text-gray-900 flex items-center gap-2">
+                        <span class="text-xl">💬</span> 
+                        对话记录
+                        <span class="text-xs font-normal text-gray-600 ml-auto">实时AI对话体验</span>
+                    </h3>
                 </div>
-                <div id="thinkingMessages" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                    <div class="flex items-start gap-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                            <span class="text-white text-sm font-bold">AI</span>
+                <div id="chatMessages" class="flex-1 overflow-y-auto py-4 px-12 space-y-3 custom-scrollbar">
+                    <div class="message message-result p-4 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                                <span class="text-white text-sm font-bold">AI</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-gray-800">
+                                    <strong class="text-indigo-700 text-base">AI助手:</strong> 
+                                    <div class="mt-1 text-sm leading-relaxed">
+                                        您好！我是AI Auto Agent智能对话助手。请输入您的问题，我将为您提供智能回答和详细的思考过程。您可以在左侧切换查看对话记录和思考过程。
+                                    </div>
                         </div>
-                        <div class="flex-1 bg-gradient-to-br from-primary-50 to-accent-50 rounded-xl p-4 border border-primary-200">
-                            <div class="text-sm text-primary-800">
-                                <strong class="bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">AI助手:</strong> 
-                                您好！我是AI Auto Agent智能对话助手，请在右侧输入您的问题，我将在这里展示思考和执行过程。
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 右侧结果面板 -->
-            <div class="w-1/2 flex flex-col card-enhanced rounded-2xl overflow-hidden">
-                <div class="px-6 py-4 bg-gradient-to-r from-success-50 to-primary-50 border-b border-gray-200 flex items-center gap-3">
-                    <span class="text-2xl">📋</span>
-                    <h3 class="font-bold text-lg bg-gradient-to-r from-success-600 to-primary-600 bg-clip-text text-transparent">最终执行结果</h3>
+            <!-- 思考过程面板 -->
+            <div id="processPanel" class="h-full flex flex-col" style="display: none;">
+                <div class="p-4 border-b bg-gradient-to-r from-indigo-50 to-purple-50">
+                    <h3 class="font-bold text-lg text-gray-900 flex items-center gap-2">
+                        <span class="text-xl">🧠</span> 
+                        AI思考过程
+                        <span class="text-xs font-normal text-gray-600 ml-auto">实时思考流程展示</span>
+                    </h3>
                 </div>
-                <div id="resultMessages" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                    <div class="flex items-start gap-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-success-500 to-primary-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                            <span class="text-white text-sm font-bold">AI</span>
+                <div id="processMessages" class="flex-1 overflow-y-auto py-4 px-12 space-y-3 custom-scrollbar">
+                    <div class="message message-thinking p-4 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                                <span class="text-white text-sm font-bold">AI</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-gray-800">
+                                    <strong class="text-indigo-700 text-base">AI助手:</strong> 
+                                    <div class="mt-1 text-sm leading-relaxed">
+                                        这里将显示AI的详细思考和执行过程，包括任务分析、精准执行、质量监督等各个阶段的完整流程。
+                                    </div>
                         </div>
-                        <div class="flex-1 bg-gradient-to-br from-success-50 to-primary-50 rounded-xl p-4 border border-success-200">
-                            <div class="text-sm text-success-800">
-                                <strong class="bg-gradient-to-r from-success-600 to-primary-600 bg-clip-text text-transparent">AI助手:</strong> 
-                                这里将显示AI的最终执行结果和总结。
                             </div>
                         </div>
                     </div>
@@ -490,30 +426,30 @@
         </div>
 
         <!-- 底部输入区域 -->
-        <div class="mt-6 card-enhanced rounded-2xl p-6">
+        <div class="mt-3 card p-4">
             <!-- 加载状态 -->
-            <div id="loading" class="hidden text-center py-3 text-primary-600">
+            <div id="loading" class="hidden text-center py-2 text-indigo-600">
                 <div class="flex items-center justify-center gap-3">
-                    <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span class="font-semibold loading-pulse">AI正在思考中，请稍候...</span>
+                    <span class="font-medium text-sm">AI正在思考中，请稍候...</span>
                 </div>
             </div>
 
             <!-- 控制面板 -->
-            <div class="mb-6 flex flex-wrap items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-primary-50 rounded-xl border border-gray-200">
+            <div class="mb-4 flex flex-wrap items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-indigo-50 rounded-lg border border-gray-200">
                 <div class="flex items-center gap-3">
-                    <label for="aiAgentSelect" class="text-sm font-semibold text-gray-700">智能体类型</label>
-                    <select id="aiAgentSelect" class="input-enhanced px-4 py-2 rounded-xl text-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-500 outline-none transition-all duration-200">
+                    <label class="text-sm font-semibold text-gray-700">智能体类型</label>
+                    <select id="aiAgentSelect" class="input text-sm">
                         <option value="3">Auto Agent - 自动智能对话体</option>
                     </select>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <label for="maxStepSelect" class="text-sm font-semibold text-gray-700">最大执行步数</label>
-                    <select id="maxStepSelect" class="input-enhanced px-4 py-2 rounded-xl text-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-500 outline-none transition-all duration-200">
+                    <label class="text-sm font-semibold text-gray-700">最大执行步数</label>
+                    <select id="maxStepSelect" class="input text-sm">
                         <option value="1">1步</option>
                         <option value="2">2步</option>
                         <option value="3">3步</option>
@@ -523,8 +459,8 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <label for="exampleSelect" class="text-sm font-semibold text-gray-700">提问案例</label>
-                    <select id="exampleSelect" class="input-enhanced px-4 py-2 rounded-xl text-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-500 outline-none transition-all duration-200">
+                    <label class="text-sm font-semibold text-gray-700">提问案例</label>
+                    <select id="exampleSelect" class="input text-sm">
                         <option value="">请选择提问案例...</option>
                         <option value="1+1">简单计算：1+1等于几？</option>
                         <option value="请帮我分析当前人工智能技术发展趋势">分析AI技术发展趋势</option>
@@ -534,12 +470,11 @@
             </div>
 
             <!-- 输入框和发送按钮 -->
-            <div class="flex gap-4">
+            <div class="flex gap-3">
                 <input type="text" id="messageInput" placeholder="请输入您的问题，开始智能对话..." maxlength="1000"
-                       class="input-enhanced flex-1 px-6 py-4 rounded-xl focus:ring-2 focus:ring-primary-300 focus:border-primary-500 outline-none transition-all duration-200 text-gray-700 placeholder-gray-400 font-medium">
-                <button id="sendBtn" onclick="sendMessage()"
-                        class="btn-primary px-8 py-4 rounded-xl font-semibold flex items-center gap-3 transition-all duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       class="input flex-1 py-2 px-4 text-gray-700 placeholder-gray-400 text-sm">
+                <button id="sendBtn" onclick="sendMessage()" class="btn btn-primary px-6 py-2 flex items-center gap-2 font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                     发送
@@ -547,9 +482,9 @@
             </div>
 
             <!-- 会话状态 -->
-            <div class="mt-4 text-center">
-                <div class="text-xs text-gray-500 font-medium">
-                    会话ID: <span id="sessionId" class="font-mono bg-gray-100 px-2 py-1 rounded"></span>
+            <div class="mt-3 text-center">
+                <div class="text-xs text-gray-500">
+                    会话ID: <span id="sessionId" class="font-mono bg-gray-100 px-1 py-0.5 rounded text-xs"></span>
                 </div>
             </div>
         </div>
@@ -557,18 +492,16 @@
 </div>
 
 <script>
-    // 生成唯一的会话ID的函数
+    // 生成唯一的会话ID
     function generateSessionId() {
         return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
-    // 初始化会话ID
+    // 初始化
     let sessionId = generateSessionId();
     document.getElementById('sessionId').textContent = sessionId;
-
     let isConnected = false;
-    let eventSource = null;
-    let currentStepMessages = new Map();
+    let currentTab = 'chat'; // 当前活动标签
 
     // 配置marked选项
     marked.setOptions({
@@ -586,12 +519,12 @@
 
     // 阶段类型映射
     const stageTypeMap = {
-        'analysis': { name: '分析阶段', icon: '🎯', class: 'stage-analysis' },
-        'execution': { name: '执行阶段', icon: '⚡', class: 'stage-execution' },
-        'supervision': { name: '监督阶段', icon: '🔍', class: 'stage-supervision' },
-        'summary': { name: '总结阶段', icon: '📊', class: 'stage-summary' },
-        'error': { name: '错误信息', icon: '❌', class: 'stage-error' },
-        'complete': { name: '完成', icon: '✅', class: 'stage-summary' }
+        'analysis': { name: '分析', icon: '🎯', class: 'stage-analysis' },
+        'execution': { name: '执行', icon: '⚡', class: 'stage-execution' },
+        'supervision': { name: '监督', icon: '🔍', class: 'stage-supervision' },
+        'summary': { name: '总结', icon: '📊', class: 'stage-summary' },
+        'error': { name: '错误', icon: '❌', class: 'stage-error' },
+        'complete': { name: '完成', icon: '✅', class: 'stage-complete' }
     };
 
     // 子类型映射
@@ -600,7 +533,6 @@
         'analysis_history': '历史评估',
         'analysis_strategy': '执行策略',
         'analysis_progress': '完成度',
-        'analysis_task_status': '任务状态',
         'execution_target': '执行目标',
         'execution_process': '执行过程',
         'execution_result': '执行结果',
@@ -610,11 +542,23 @@
         'suggestions': '改进建议',
         'score': '质量评分',
         'pass': '检查结果',
-        'completed_work': '已完成工作',
-        'incomplete_reasons': '未完成原因',
         'evaluation': '效果评估',
-        'summary_overview': '总结概览'
+        'summary_overview': '总结概览',
+        'final_answer': '最终答案'
     };
+
+    // 标签切换功能
+    function switchTab(tabName) {
+        // 更新标签状态
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(tabName + 'Tab').classList.add('active');
+        
+        // 切换面板显示
+        document.getElementById('chatPanel').style.display = tabName === 'chat' ? 'flex' : 'none';
+        document.getElementById('processPanel').style.display = tabName === 'process' ? 'flex' : 'none';
+        
+        currentTab = tabName;
+    }
 
     // 发送消息
     function sendMessage() {
@@ -622,17 +566,17 @@
         const message = messageInput.value.trim();
 
         if (!message) {
-            showAlert('请输入消息内容', 'warning');
+            alert('请输入消息内容');
             return;
         }
 
         if (isConnected) {
-            showAlert('正在处理中，请稍候...', 'info');
+            alert('正在处理中，请稍候...');
             return;
         }
 
         // 显示用户消息
-        addMessage(message, 'user');
+        addUserMessage(message);
 
         // 清空输入框
         messageInput.value = '';
@@ -640,7 +584,7 @@
         // 禁用发送按钮
         const sendBtn = document.getElementById('sendBtn');
         sendBtn.disabled = true;
-        sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        sendBtn.style.opacity = '0.5';
 
         // 显示加载状态
         document.getElementById('loading').style.display = 'block';
@@ -675,20 +619,8 @@
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
 
-            // 清空当前步骤消息缓存
-            currentStepMessages.clear();
-
             // 清空之前的AI消息（保留欢迎消息）
-            const thinkingDiv = document.getElementById('thinkingMessages');
-            const resultDiv = document.getElementById('resultMessages');
-
-            // 清空思考面板（保留第一条欢迎消息）
-            const thinkingChildren = Array.from(thinkingDiv.children);
-            thinkingChildren.slice(1).forEach(child => child.remove());
-
-            // 清空结果面板（保留第一条欢迎消息）
-            const resultChildren = Array.from(resultDiv.children);
-            resultChildren.slice(1).forEach(child => child.remove());
+            clearPreviousMessages();
 
             isConnected = true;
 
@@ -698,10 +630,10 @@
                         // Stream ended
                         isConnected = false;
                         sendBtn.disabled = false;
-                        sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        sendBtn.style.opacity = '1';
                         document.getElementById('loading').style.display = 'none';
                         // 添加完成标识
-                        addStageMessage('complete', null, '✨ 任务执行完成！感谢您的使用。', null);
+                        addAIMessage('complete', null, '✨ 任务执行完成！', null);
                         return;
                     }
 
@@ -721,9 +653,8 @@
                                 } catch (e) {
                                     // If not JSON, treat as plain text
                                     console.warn('无法解析JSON数据:', data);
-                                    addStageMessage('error', null, data, null);
+                                    addAIMessage('error', null, data, null);
                                 }
-                                // Scroll to bottom after adding content
                                 scrollToBottom();
                             }
                         }
@@ -734,9 +665,9 @@
                     console.error('读取流数据错误:', error);
                     isConnected = false;
                     sendBtn.disabled = false;
-                    sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    sendBtn.style.opacity = '1';
                     document.getElementById('loading').style.display = 'none';
-                    addStageMessage('error', null, '连接中断，请重试', null);
+                    addAIMessage('error', null, '连接中断，请重试', null);
                 });
             }
             readStream();
@@ -745,51 +676,64 @@
             console.error('请求错误:', error);
             isConnected = false;
             sendBtn.disabled = false;
-            sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            sendBtn.style.opacity = '1';
             document.getElementById('loading').style.display = 'none';
-            addStageMessage('error', null, '请求失败: ' + error.message, null);
+            addAIMessage('error', null, '请求失败: ' + error.message, null);
         });
-    }
-
-    // 显示提示信息
-    function showAlert(message, type = 'info') {
-        // 这里可以实现一个美观的提示框
-        alert(message);
     }
 
     // 处理SSE消息
     function handleSSEMessage(jsonData) {
-        const { type, subType, step, content, completed, timestamp, sessionId } = jsonData;
+        const { type, subType, step, content } = jsonData;
 
         if (!content || content.trim() === '') {
             return; // 忽略空内容
         }
 
         // 根据type和subType添加消息
-        addStageMessage(type, subType, content, step);
+        addAIMessage(type, subType, content, step);
     }
 
-    // 添加阶段消息
-    function addStageMessage(type, subType, content, step) {
-        // 根据消息类型决定显示在哪个面板
-        let targetContainer;
-        if (type === 'summary' || type === 'completed') {
-            // 总结和完成消息显示在右侧结果面板
-            targetContainer = document.getElementById('resultMessages');
-        } else {
-            // 其他消息（分析、执行、监督等）显示在左侧思考面板
-            targetContainer = document.getElementById('thinkingMessages');
-        }
+    // 添加用户消息
+    function addUserMessage(content) {
+        const chatContainer = document.getElementById('chatMessages');
+        const processContainer = document.getElementById('processMessages');
 
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'flex items-start gap-3 message';
+        // 在两个面板都添加用户消息
+        [chatContainer, processContainer].forEach(container => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message message-user p-4 rounded-lg';
 
+            messageDiv.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                        <span class="text-white text-sm font-bold">您</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-gray-800">
+                            <strong class="text-orange-700 text-base">您:</strong> 
+                            <div class="mt-1 text-sm leading-relaxed">${content}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(messageDiv);
+        });
+
+        scrollToBottom();
+    }
+
+    // 添加AI消息
+    function addAIMessage(type, subType, content, step) {
         // 获取阶段信息
         const stageInfo = stageTypeMap[type] || { name: type, icon: '📝', class: 'stage-analysis' };
         const subTypeName = subType ? subTypeMap[subType] || subType : '';
 
         // 构建标识标签
-        let indicators = `<span class="stage-indicator ${stageInfo.class}">${stageInfo.icon} ${stageInfo.name}</span>`;
+        let indicators = '';
+        if (stageInfo.name) {
+            indicators += `<span class="stage-indicator ${stageInfo.class}">${stageInfo.icon} ${stageInfo.name}</span>`;
+        }
         if (subTypeName) {
             indicators += `<span class="sub-type-indicator">${subTypeName}</span>`;
         }
@@ -800,20 +744,33 @@
         // 渲染Markdown内容
         const renderedContent = marked.parse(content);
 
-        // 根据面板类型选择不同的样式
-        const isResultPanel = targetContainer.id === 'resultMessages';
-        const avatarClass = isResultPanel ? 'bg-gradient-to-br from-success-500 to-primary-500' : 'bg-gradient-to-br from-primary-500 to-accent-500';
-        const cardClass = isResultPanel ? 'bg-gradient-to-br from-success-50 to-primary-50 border border-success-200' : 'bg-gradient-to-br from-primary-50 to-accent-50 border border-primary-200';
-        const textClass = isResultPanel ? 'text-success-800' : 'text-primary-800';
+        // 决定显示在哪个面板
+        let targetContainer;
+        let messageClass;
+        
+        if (type === 'summary' || subType === 'final_answer' || type === 'complete') {
+            // 总结和最终答案显示在对话记录面板
+            targetContainer = document.getElementById('chatMessages');
+            messageClass = 'message-result';
+        } else {
+            // 其他消息显示在思考过程面板
+            targetContainer = document.getElementById('processMessages');
+            messageClass = 'message-thinking';
+        }
+
+                const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${messageClass} p-4 rounded-lg`;
 
         messageDiv.innerHTML = `
-            <div class="w-10 h-10 ${avatarClass} rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                <span class="text-white text-sm font-bold">AI</span>
-            </div>
-            <div class="flex-1 ${cardClass} rounded-xl p-4">
-                <div class="text-sm ${textClass}">
-                    <strong class="bg-gradient-to-r ${isResultPanel ? 'from-success-600 to-primary-600' : 'from-primary-600 to-accent-600'} bg-clip-text text-transparent">AI助手:</strong> ${indicators}
-                    <div class="markdown-content">${renderedContent}</div>
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <span class="text-white text-sm font-bold">AI</span>
+                </div>
+                <div class="flex-1">
+                    <div class="text-gray-800">
+                        <strong class="text-indigo-700 text-base">AI助手:</strong> ${indicators}
+                        <div class="markdown-content mt-1">${renderedContent}</div>
+                    </div>
                 </div>
             </div>
         `;
@@ -825,62 +782,36 @@
             hljs.highlightElement(block);
         });
 
-        // 滚动到对应面板的底部
-        scrollToBottom(targetContainer);
+        scrollToBottom();
         return messageDiv;
     }
 
-    // 添加用户消息
-    function addMessage(content, type) {
-        if (type === 'user') {
-            // 用户消息同时显示在两个面板的顶部
-            const thinkingDiv = document.getElementById('thinkingMessages');
-            const resultDiv = document.getElementById('resultMessages');
+    // 清空之前的消息（保留欢迎消息）
+    function clearPreviousMessages() {
+        const chatContainer = document.getElementById('chatMessages');
+        const processContainer = document.getElementById('processMessages');
 
-            [thinkingDiv, resultDiv].forEach(container => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'flex items-start gap-3 message';
+        // 清空对话记录（保留第一条欢迎消息）
+        const chatChildren = Array.from(chatContainer.children);
+        chatChildren.slice(1).forEach(child => child.remove());
 
-                messageDiv.innerHTML = `
-                    <div class="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                        <span class="text-white text-sm font-bold">您</span>
-                    </div>
-                    <div class="flex-1 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
-                        <div class="text-sm text-green-800">
-                            <strong class="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">您:</strong> ${content}
-                        </div>
-                    </div>
-                `;
-                container.appendChild(messageDiv);
-                scrollToBottom(container);
-            });
-        }
+        // 清空思考过程（保留第一条欢迎消息）
+        const processChildren = Array.from(processContainer.children);
+        processChildren.slice(1).forEach(child => child.remove());
     }
 
     // 滚动到底部
-    function scrollToBottom(container) {
-        if (!container) {
-            // 如果没有指定容器，滚动两个面板
-            const thinkingDiv = document.getElementById('thinkingMessages');
-            const resultDiv = document.getElementById('resultMessages');
-            thinkingDiv.scrollTop = thinkingDiv.scrollHeight;
-            resultDiv.scrollTop = resultDiv.scrollHeight;
-        } else {
-            container.scrollTop = container.scrollHeight;
-        }
+    function scrollToBottom() {
+        const chatContainer = document.getElementById('chatMessages');
+        const processContainer = document.getElementById('processMessages');
+        
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        processContainer.scrollTop = processContainer.scrollHeight;
     }
 
     // 新建对话
     function createNewChat() {
-        // 清空消息面板（保留欢迎消息）
-        const thinkingDiv = document.getElementById('thinkingMessages');
-        const resultDiv = document.getElementById('resultMessages');
-
-        const thinkingChildren = Array.from(thinkingDiv.children);
-        thinkingChildren.slice(1).forEach(child => child.remove());
-
-        const resultChildren = Array.from(resultDiv.children);
-        resultChildren.slice(1).forEach(child => child.remove());
+        clearPreviousMessages();
 
         // 生成新的会话ID
         sessionId = generateSessionId();
@@ -888,20 +819,19 @@
 
         // 清空输入框
         document.getElementById('messageInput').value = '';
-
-        // 聚焦输入框
         document.getElementById('messageInput').focus();
 
-        showAlert('新对话已创建！', 'success');
+        // 切换到对话记录标签
+        switchTab('chat');
+
+        alert('新对话已创建！');
     }
 
     // 清空所有对话
     function clearAllChats() {
         if (confirm('确定要清空所有对话记录吗？')) {
             createNewChat();
-            // 这里可以添加清空侧边栏历史记录的逻辑
-            document.getElementById('chatList').innerHTML = '';
-            showAlert('所有对话已清空！', 'success');
+            alert('所有对话已清空！');
         }
     }
 
@@ -918,7 +848,6 @@
         if (selectedExample) {
             document.getElementById('messageInput').value = selectedExample;
             this.value = '';
-            // 聚焦输入框
             document.getElementById('messageInput').focus();
         }
     });
@@ -929,15 +858,6 @@
     // 页面加载完成后聚焦输入框
     window.addEventListener('load', function() {
         document.getElementById('messageInput').focus();
-        
-        // 添加页面加载动画
-        document.body.style.opacity = '0';
-        document.body.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            document.body.style.transition = 'all 0.5s ease-out';
-            document.body.style.opacity = '1';
-            document.body.style.transform = 'translateY(0)';
-        }, 100);
     });
 </script>
 </body>
