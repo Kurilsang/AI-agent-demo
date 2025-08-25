@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
+
 import site.kuril.domain.agent.model.entity.AutoAgentExecuteResultEntity;
 import site.kuril.domain.agent.model.entity.ExecuteCommandEntity;
 import site.kuril.domain.agent.model.valobj.AiAgentClientFlowConfigVO;
@@ -99,92 +99,9 @@ public class Step4LogExecutionSummaryNode extends AbstractExecuteSupport {
         sendSseResult(dynamicContext, AutoAgentExecuteResultEntity.createSummarySubResult(4, "summary_overview", summaryOverview.toString(), sessionId));
     }
     
-    /**
-     * 记录成功完成的信息
-     */
-    private void logSuccessfulCompletion(DefaultAutoAgentExecuteStrategyFactory.DynamicContext dynamicContext,
-                                       String sessionId) {
-        log.info("\n🎉 === 任务成功完成 ===");
-        log.info("✅ 所有步骤已成功执行完成");
-        log.info("📋 执行历史长度: {} 字符", 
-                dynamicContext.getExecutionHistory() != null ? 
-                        dynamicContext.getExecutionHistory().length() : 0);
-        
-        // 构建成功完成消息 - 显示执行统计而不是虚假的执行步骤
-        StringBuilder completionMessage = new StringBuilder();
-        completionMessage.append("## ✅ 任务执行完成\n\n");
-        completionMessage.append("🎯 **您的问题已经得到处理，相关的分析和建议已在前面的步骤中提供。**\n\n");
-        completionMessage.append("📊 **执行统计:**\n");
-        completionMessage.append("- 执行步数: ").append(Math.max(1, dynamicContext.getStep() - 1)).append("/").append(dynamicContext.getMaxStep()).append(" 步\n");
-        completionMessage.append("- 任务完成时间: ").append(java.time.LocalDateTime.now().format(
-                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("\n");
-        completionMessage.append("- 执行状态: 已成功完成\n\n");
-        completionMessage.append("🌟 感谢您使用AI Auto Agent智能助手！");
-        
-        // 发送成功完成消息到前端
-        sendSseResult(dynamicContext, AutoAgentExecuteResultEntity.createSummarySubResult(4, "completed_work", completionMessage.toString(), sessionId));
-        
-        // 保存成功完成的总结
-        dynamicContext.setValue("finalStatus", "SUCCESSFULLY_COMPLETED");
-        dynamicContext.setValue("completionReason", "任务在规定步数内成功完成");
-    }
+
     
-    /**
-     * 生成最终总结报告
-     */
-    private void generateFinalReport(ExecuteCommandEntity requestParameter, 
-                                   DefaultAutoAgentExecuteStrategyFactory.DynamicContext dynamicContext) {
-        try {
-            log.info("\n📋 === 生成未完成任务的总结报告 ===");
-            
-            // 发送生成报告开始消息
-            sendSseResult(dynamicContext, AutoAgentExecuteResultEntity.createSummarySubResult(4, "incomplete_reasons", 
-                "🔄 正在生成详细的总结报告...", requestParameter.getSessionId()));
-            
-            String summaryPrompt = buildSummaryPrompt(requestParameter, dynamicContext);
-            
-            // 获取任务分析客户端进行总结（复用任务分析客户端）
-            AiAgentClientFlowConfigVO analyzerConfig = dynamicContext.getAiAgentClientFlowConfigVOMap()
-                    .get(AiClientTypeEnumVO.TASK_ANALYZER_CLIENT.getCode());
-            
-            if (analyzerConfig == null) {
-                log.warn("⚠️ 未找到任务分析客户端配置，跳过详细总结报告生成");
-                generateSimpleSummary(requestParameter, dynamicContext);
-                return;
-            }
-            
-            ChatClient chatClient = getChatClientByClientId(analyzerConfig.getClientId());
-            
-            log.info("🤔 开始生成最终总结报告...");
-            String summaryResult = chatClient
-                    .prompt(summaryPrompt)
-                    .options(OpenAiChatOptions.builder()
-                            .model("gpt-4o")
-                            .maxTokens(2000)
-                            .temperature(0.3)
-                            .build())
-                    .advisors(a -> a
-                            .param("CHAT_MEMORY_CONVERSATION_ID", requestParameter.getSessionId() + "-summary")
-                            .param("CHAT_MEMORY_RETRIEVE_SIZE", 100))
-                    .call().content();
-            
-            logFinalReport(summaryResult);
-            
-            // 发送详细总结报告到前端
-            sendSseResult(dynamicContext, AutoAgentExecuteResultEntity.createSummarySubResult(4, "evaluation", summaryResult, requestParameter.getSessionId()));
-            
-            // 将总结结果保存到动态上下文中
-            dynamicContext.setValue("finalSummary", summaryResult);
-            dynamicContext.setValue("finalStatus", "PARTIALLY_COMPLETED");
-            dynamicContext.setValue("completionReason", "达到最大步数限制");
-            
-        } catch (Exception e) {
-            log.error("❌ 生成最终总结报告时出现异常: {}", e.getMessage(), e);
-            sendSseResult(dynamicContext, AutoAgentExecuteResultEntity.createErrorResult(4, 
-                "生成总结报告时出现异常: " + e.getMessage(), requestParameter.getSessionId()));
-            generateSimpleSummary(requestParameter, dynamicContext);
-        }
-    }
+
 
     /**
      * 构建总结提示词
@@ -325,26 +242,34 @@ public class Step4LogExecutionSummaryNode extends AbstractExecuteSupport {
             
             // 构建针对用户问题的最终答案提示词
             String finalAnswerPrompt = String.format("""
-                    用户问题：%s
-                    
-                    根据以下执行过程，直接回答用户的问题，提供具体的建议和答案：
-                    
-                    执行过程：
+                    # 用户的原始问题
                     %s
                     
-                    请注意：
-                    1. 直接回答用户的问题，不要总结执行过程
-                    2. 提供具体、实用的建议
-                    3. 确保答案与用户问题高度相关
-                    4. 如果执行过程中没有找到充分信息，请诚实说明
+                    # 你的任务
+                    请直接回答用户的问题，提供清晰、准确、实用的答案。
+                    
+                    # 参考信息（如果有的话）
+                    %s
+                    
+                    # 重要要求
+                    1. 直接回答用户问题，不要提及"执行过程"、"分析步骤"等内部流程
+                    2. 如果是数学计算，直接给出计算结果和解释
+                    3. 如果是咨询建议，提供具体可行的方案
+                    4. 如果是知识问答，给出准确详细的解答
+                    5. 保持回答简洁明了，重点突出
+                    6. 如果问题涉及多个方面，分条回答
+                    
+                    请现在开始直接回答用户的问题：
                     """, 
                     requestParameter.getMessage(),
-                    !executionHistory.trim().isEmpty() ? executionHistory : "暂无详细执行记录");
+                    !executionHistory.trim().isEmpty() ? 
+                        "以下是相关的分析和处理信息：\n" + executionHistory : 
+                        "基于常识和专业知识回答");
             
-            // 使用AI生成最终答案
-            AiAgentClientFlowConfigVO summaryConfig = dynamicContext.getAiAgentClientFlowConfigVOMap().get("Summary");
+            // 使用AI生成最终答案 - 优先使用智能响应助手
+            AiAgentClientFlowConfigVO summaryConfig = dynamicContext.getAiAgentClientFlowConfigVOMap().get(AiClientTypeEnumVO.RESPONSE_ASSISTANT.getCode());
             if (summaryConfig == null) {
-                log.warn("⚠️ 未找到Summary配置，尝试使用其他可用配置");
+                log.warn("⚠️ 未找到RESPONSE_ASSISTANT配置，尝试使用其他可用配置");
                 // 尝试使用其他配置
                 summaryConfig = findAnyAvailableConfig(dynamicContext);
                 if (summaryConfig == null) {
@@ -401,23 +326,29 @@ public class Step4LogExecutionSummaryNode extends AbstractExecuteSupport {
             
             // 构建智能总结提示词
             String smartSummaryPrompt = String.format("""
-                    用户的原始问题：%s
-                    
-                    以下是AI助手的完整执行过程和思考历史：
+                    # 用户问题
                     %s
                     
-                    请根据上述执行历史，直接回答用户的原始问题。注意：
+                    # 你的任务
+                    请直接回答用户的问题，提供清晰、准确、实用的答案。
                     
-                    1. 请提供具体、准确的答案，不要重复执行过程
-                    2. 如果问题是数学计算，请直接给出计算结果
-                    3. 如果问题是咨询类，请基于执行过程给出建议
-                    4. 如果执行过程中没有找到明确答案，请诚实说明
-                    5. 答案要简洁明了，针对用户问题直接回应
+                    # 可参考的处理信息
+                    %s
                     
-                    请直接开始回答，不要说"根据执行历史"这样的开场白。
+                    # 回答要求
+                    1. 直接针对用户问题给出答案，不要提及内部处理流程
+                    2. 如果是计算问题，给出具体数值和计算过程
+                    3. 如果是咨询问题，提供可行的建议和方案
+                    4. 如果是知识问题，给出准确的解释和说明
+                    5. 回答要简洁明了，重点突出，便于理解
+                    6. 如果无法提供完整答案，请诚实说明原因
+                    
+                    请直接开始回答用户的问题：
                     """, 
                     userQuestion,
-                    !executionHistory.trim().isEmpty() ? executionHistory : "执行过程中暂无详细记录");
+                    !executionHistory.trim().isEmpty() ? 
+                        "相关处理信息：\n" + executionHistory : 
+                        "基于专业知识和常识回答");
             
             ChatClient chatClient = getChatClientByClientId(availableConfig.getClientId());
             String smartAnswer = chatClient

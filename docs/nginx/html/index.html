@@ -748,10 +748,14 @@
         let targetContainer;
         let messageClass;
         
-        if (type === 'summary' || subType === 'final_answer' || type === 'complete') {
-            // 总结和最终答案显示在对话记录面板
+        if (subType === 'final_answer' || type === 'complete') {
+            // 最终答案和完成消息显示在对话记录面板
             targetContainer = document.getElementById('chatMessages');
             messageClass = 'message-result';
+        } else if (subType === 'summary_overview') {
+            // 执行总结概览只在思考过程中显示，不在对话记录中显示
+            targetContainer = document.getElementById('processMessages');
+            messageClass = 'message-thinking';
         } else {
             // 其他消息显示在思考过程面板
             targetContainer = document.getElementById('processMessages');
